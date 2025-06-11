@@ -44,15 +44,12 @@ def get_upbit(chat: ChatContext):
     
     price = result_json['trade_price']
     change = result_json['signed_change_rate']*100
-    
     if price % 1 == 0:
         price = int(price)
     
     result = query + f'\n현재가 : {price:,}원\n등락률 : {change:,.2f}%'
-    
-    user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
-
-    if user_coin_info:
+    try:
+        user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
         amount = user_coin_info["amount"]
         average = user_coin_info["average"]
         seed = average*amount
@@ -60,7 +57,8 @@ def get_upbit(chat: ChatContext):
         percent = round((total/seed-1)*100,1)
         plus_mark = "+" if percent > 0 else ""
         result += f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
-
+    except:
+        pass        
     chat.reply(result)
 
 def get_my_coins(chat: ChatContext):
