@@ -76,7 +76,6 @@ def on_message(chat: ChatContext):
 @bot.on_event("new_member")
 def on_newmem(chat: ChatContext):
     chat.reply(f"어서와라 {chat.sender.name}")
-#    time.sleep(1)
     chat.reply_media("res/welcome.jpeg")
 
 #퇴장감지
