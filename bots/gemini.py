@@ -8,7 +8,7 @@ from iris import ChatContext
 import os, io
 import time
 
-pro_key = os.getenv("GEMINI_KEY")
+pro_key = os.getenv("AIzaSyBbpYQFROJvzQnRxXmAkbe_1gjJpOR1R2w")
 
 safety_settings=[
     types.SafetySetting(
