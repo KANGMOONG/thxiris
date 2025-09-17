@@ -52,7 +52,7 @@ def get_gemini_image(chat : ChatContext):
             api_key=pro_key,
         )
 
-        model = "gemini-2.5-pro"
+        model = "gemini-2.5-flash-image-preview"
         contents = [
             types.Content(
                 role="user",
@@ -117,7 +117,7 @@ def get_gemini_image_to_image(chat : ChatContext):
             api_key=pro_key,
         )
 
-        model = "gemini-2.5-pro"
+        model = "gemini-2.5-flash-image-preview"
         contents = [msg, img]
         generate_content_config = types.GenerateContentConfig(
             response_modalities=[
@@ -175,7 +175,7 @@ def get_gemini_vision_analyze_image_reply(chat: ChatContext):
 def get_gemini_vision_analyze_image(img):
     client = genai.Client(api_key=pro_key)
     res = client.models.generate_content(
-        model="gemini-2.5-pro",
+        model="gemini-2.5-flash-image-preview",
         config=types.GenerateContentConfig(
             system_instruction="analyze the given image, and rate violence, sexuality score out of 100 in below format. If the image given is text-only image, scores must be N/A. If sexuality score is over 50, 성인물 will be True. Do not add any other comments or markdown\n폭력성 : score/100\n선정성 : score/100\n성인물 : True/False",
             tools=[types.Tool(
