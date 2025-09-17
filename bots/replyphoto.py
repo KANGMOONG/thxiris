@@ -3,9 +3,13 @@ from iris.decorators import *
 
 def reply_photo(chat: ChatContext, kl):
     match chat.message.command:
-        case "!tt":
+        case "!1단계":
             send_tiger(chat)
-        case "!ttt":
+        case "!2단계":
+            send_tiger2(chat)
+        case "!3단계":
+            send_tiger3(chat)
+        case "!절망시리즈":
             send_triple_tiger(chat)
         case "!프사":
             send_avatar(chat)
@@ -13,10 +17,13 @@ def reply_photo(chat: ChatContext, kl):
             send_avatar_kakaolink(chat, kl)
 
 def send_tiger(chat: ChatContext):
-    chat.reply_media("res/aaa.jpeg")
-
+    chat.reply_media("res/1step.jpeg")
+def send_tiger2(chat: ChatContext):
+    chat.reply_media("res/2step.jpeg")
+def send_tiger3(chat: ChatContext):
+    chat.reply_media("res/3step.jpeg")
 def send_triple_tiger(chat: ChatContext):
-    chat.reply_media([open("res/aaa.jpeg", "rb"), open("res/aaa.jpeg", "rb"), open("res/aaa.jpeg", "rb")])
+    chat.reply_media([open("res/1step.jpeg", "rb"), open("res/2step.jpeg", "rb"), open("res/3step.jpeg","rb")])
 
 @is_reply
 def send_avatar(chat: ChatContext):

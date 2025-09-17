@@ -1,4 +1,3 @@
-import time
 from iris import ChatContext, Bot
 from iris.bot.models import ErrorContext
 from bots.gemini import get_gemini
@@ -24,65 +23,99 @@ bot = Bot(iris_url)
 @is_not_banned
 def on_message(chat: ChatContext):
     try:
-        match chat.message.command:
-            
+        # ### 변경/추가: match 전에 command 값을 안전하게 추출/정리
+        raw = getattr(chat.message, "command", None) \
+              or getattr(chat.message, "text", None) \
+              or getattr(chat.message, "content", None) \
+              or ""                       # 안전하게 빈 문자열 기본값
+        if isinstance(raw, (bytes, bytearray)):   # bytes면 디코딩
+            raw = raw.decode(errors="ignore")
+        cmd = str(raw).strip()                    # 문자열로 확정하고 양쪽 공백 제거
+        print("DEBUG on_message cmd:", repr(cmd), type(cmd))  # ### 변경/추가: 디버그 출력
+
+        # ### 변경/추가: match는 이제 cmd 변수로 수행
+        if "불장은 불장이다" in raw:
+        chat.reply("그치?")
+        return
+	
+        match cmd:
+           
             case "!hhi":
                 chat.reply(f"Hello {chat.sender.name}")
+                return
 
-            case "!1단계" | "!2단계" | "!3단계" | "!절망시리즈":
+            case "!tt" | "!ttt" | "!프사" | "!프사링":
                 reply_photo(chat, kl)
+                return
 
             #make your own help.png or remove !iris
             case "!iris":
                 chat.reply_media("res/help.png")
+                return
 
             case "!gi" | "!i2i" | "!분석":
                 get_gemini(chat)
-            
+                return
+
             case "!ipy":
                 python_eval(chat)
-            
+                return
+
             case "!iev":
                 real_eval(chat, kl)
-            
+                return
+
             case "!ban":
                 ban_user(chat)
-            
+                return
+
             case "!unban":
                 unban_user(chat)
+                return
 
             case "!주식":
                 create_stock_image(chat)
+                return
 
             case "!ig":
                 get_imagen(chat)
-            
+                return
+
             case "!가사찾기":
                 find_lyrics(chat)
+                return
 
             case "!노래가사":
                 get_lyrics(chat)
+                return
 
             case "!텍스트" | "!사진" | "!껄무새" | "!멈춰" | "!지워" | "!진행" | "!말대꾸" | "!텍스트추가":
                 draw_text(chat)
-            
+                return
+
             case "!코인" | "!내코인" | "!바낸" | "!김프" | "!달러" | "!코인등록" | "!코인삭제":
                 get_coin_info(chat)
-            
-    except Exception as e :
-        print(e)
+                return
+
+    except Exception as e:
+        # ### 변경/추가: 전체 예외 스택을 출력하면 문제 원인 파악이 쉬워집니다
+        import traceback
+        traceback.print_exc()
+        print("ERROR in on_message:", e)
+        # 테스트 중이라면 채팅으로도 에러 알림(선택)
+        # chat.reply(f"오류 발생: {e}")
 
 #입장감지
 @bot.on_event("new_member")
 def on_newmem(chat: ChatContext):
     chat.reply(f"어서와라 {chat.sender.name}")
-#    time.sleep(1)
-    chat.reply_media("res/welcome.jpeg")
+    pass
 
 #퇴장감지
 @bot.on_event("del_member")
 def on_delmem(chat: ChatContext):
     chat.reply(f"잘가시고 {chat.sender.name}")
+    pass
 
 
 @bot.on_event("error")

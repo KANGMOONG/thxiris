@@ -1,4 +1,5 @@
 # coding: utf8
+import random
 from PIL import Image, ImageFont, ImageDraw
 import requests, random, os
 from io import BytesIO, BufferedReader
@@ -40,7 +41,8 @@ def draw_default(chat: ChatContext):
             case 1:
                 txt = msg
                 check = ""
-                img = Image.open(RES_PATH + 'default.jpg')
+                img_name=random.choice(['random1.jpg','random2.jpg'])
+                img = Image.open(RES_PATH + img_name)
 
             case 2:
                 img = get_image_from_url(msg_split[0])
