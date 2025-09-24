@@ -30,7 +30,7 @@ def on_message(chat: ChatContext):
             case "!hhi":
                 chat.reply(f"Hello {chat.sender.name}")
 
-            case "!1단계" | "!2단계" | "!3단계" | "!절망시리즈":
+            case "!1단계" | "!2단계" | "!3단계" | "!절망시리즈" | "!퍽":
                 reply_photo(chat, kl)
 
             #make your own help.png or remove !iris

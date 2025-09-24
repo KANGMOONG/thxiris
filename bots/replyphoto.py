@@ -15,6 +15,8 @@ def reply_photo(chat: ChatContext, kl):
             send_avatar(chat)
         case "!프사링":
             send_avatar_kakaolink(chat, kl)
+        case "!퍽":
+            send_cat(chat)
 
 def send_tiger(chat: ChatContext):
     chat.reply_media("res/1step.jpeg")
@@ -22,6 +24,8 @@ def send_tiger2(chat: ChatContext):
     chat.reply_media("res/2step.jpeg")
 def send_tiger3(chat: ChatContext):
     chat.reply_media("res/3step.jpeg")
+def send_cat(chat: ChatContext):
+    chat.reply_media("res/cat.jpg")
 def send_triple_tiger(chat: ChatContext):
     chat.reply_media([open("res/1step.jpeg", "rb"), open("res/2step.jpeg", "rb"), open("res/3step.jpeg","rb")])
 
