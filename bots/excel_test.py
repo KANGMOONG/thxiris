@@ -20,5 +20,5 @@ def excel(chat: ChatContext):
     
         # URL일 때 실행할 코드
     else:
-        print("메시지가 URL이 아닙니다.",msgs)
+        print("메시지가 URL이 아닙니다.",msg)
         # URL이 아닐 때 실행할 코드
