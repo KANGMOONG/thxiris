@@ -16,8 +16,9 @@ def excel(chat: ChatContext):
     )
 
     if url_pattern.search(msg):
-        print("메시지가 URL입니다.")
+        print("메시지가 URL입니다.",msg)
+    
         # URL일 때 실행할 코드
     else:
-        print("메시지가 URL이 아닙니다.")
+        print("메시지가 URL이 아닙니다.",msgs)
         # URL이 아닐 때 실행할 코드
