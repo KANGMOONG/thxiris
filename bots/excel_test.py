@@ -1,6 +1,14 @@
 from iris import ChatContext
 from iris.decorators import *
 import re  # 정규식 모듈
+import os
+import requests
+import google.generativeai as genai
+
+api_key = os.getenv("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError("환경 변수에 'GEMINI_API_KEY'가 설정되어 있지 않습니다.")
 
 def excel(chat: ChatContext):
     msg = chat.message.msg  # 메시지 꺼내기
