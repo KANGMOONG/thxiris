@@ -46,7 +46,7 @@ def summarize_text(article_text: str) -> str:
     prompt = f"""
 다음 텍스트를 읽고
 서론, 본론, 결론 구조로 요약해줘.
-각 항목은 20자 이내로 작성하고
+각 항목은 40자 이내로 작성하고
 다음 형식으로 출력해줘:
 
 -
