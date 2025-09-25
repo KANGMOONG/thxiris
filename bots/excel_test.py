@@ -29,7 +29,7 @@ def excel(chat: ChatContext):
     if url_pattern.search(msg):
         print("메시지가 URL입니다.",msg)
         prompt = f"""
-        {msg} 링크 50자 내로 요약해줘.
+        {msg} 링크 서론, 중론, 결론 형태로 100자 내로 요약해줘.
         """
         # API 호출
         response = model.generate_content(prompt)
