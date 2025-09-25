@@ -32,7 +32,7 @@ def summarize_text(article_text: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o",  # 사용 중인 모델명
         messages=[
-            {"role": "system", "content": "아래 텍스트를 한국어로 간결하게 요약해줘."},
+            {"role": "system", "content": "아래 텍스트 서론,본론,결론 구조로 3줄 한국어로 간결하게 요약해줘."},
             {"role": "user", "content": article_text}
         ],
         # max_tokens → max_completion_tokens로 교체
