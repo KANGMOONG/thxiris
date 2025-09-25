@@ -1,11 +1,15 @@
 import os
+from dotenv import load_dotenv
 import google.generativeai as genai
 
-# 환경 변수에서 API 키 읽기
+# .env 파일 로드
+load_dotenv()
+
+# 환경 변수에서 API 키 가져오기
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not API_KEY:
-    raise ValueError("GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다.")
+    raise ValueError("GEMINI_API_KEY 환경변수가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
 
 # API 키 설정
 genai.configure(api_key=API_KEY)
