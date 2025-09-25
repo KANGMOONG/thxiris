@@ -17,7 +17,8 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    msgcheck2(chat)
+    #msgcheck2(chat)
+    print("봇테스트")
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
