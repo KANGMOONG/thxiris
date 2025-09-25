@@ -1,15 +1,24 @@
+import time
 from iris import ChatContext, Bot
 from iris.bot.models import ErrorContext
 from bots.gemini import get_gemini
 from bots.pyeval import python_eval, real_eval
+from bots.stock import create_stock_image
+from bots.imagen import get_imagen
+from bots.lyrics import get_lyrics, find_lyrics
 from bots.replyphoto import reply_photo
 from bots.text2image import draw_text
 from bots.coin import get_coin_info
+from bots.test_img import get_img
+from bots.excel_test import excel
 
 from iris.decorators import *
+from helper.BanControl import ban_user, unban_user
+from iris.kakaolink import IrisLink
 
-
+from bots.detect_nickname_change import detect_nickname_change
 import sys, threading
+
 
 iris_url = sys.argv[1]
 bot = Bot(iris_url)
