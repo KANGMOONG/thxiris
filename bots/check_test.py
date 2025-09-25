@@ -21,6 +21,9 @@ def checktest(chat: ChatContext):
 
     if url_pattern.search(msg):
         print("메시지가 URL입니다.",msg)
+        url=msg
+        return url
 
     else:
         print("메시지가 URL이 아닙니다.",msg)
+  

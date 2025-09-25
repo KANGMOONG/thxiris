@@ -5,6 +5,7 @@ from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
 from iris.kakaolink import IrisLink
 from bots.check_test import checktest
+from bots.gpt_url_summary import url_summary
 
 
 
@@ -20,7 +21,10 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    checktest(chat)
+    url=None
+    url=checktest(chat)
+    if url is not None:
+        url_summary(chat)
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리

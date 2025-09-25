@@ -12,7 +12,6 @@ client = OpenAI(api_key=api_key)
 # 2️⃣ 요약할 URL
 url = chat.message.msg
 
-
 # 3️⃣ HTML 가져와서 본문 텍스트 추출
 def fetch_article_text(url):
     try:
@@ -28,15 +27,15 @@ def fetch_article_text(url):
         print("URL 불러오기 실패:", e)
         return ""
 
-# 4️⃣ GPT-5 nano로 서론·중론·결론 100자 내 요약
+# 4️⃣ GPT-5 nano로 서론·본론·결론 100자 내 요약
 def summarize_text(article_text):
     if not article_text:
         return "본문 내용을 가져오지 못했습니다."
 
     prompt = (
-        "다음 글을 읽고 서론, 중론, 결론 구조로 100자 내로 요약해줘:\n\n"
+        "다음 글을 읽고 서론, 본론, 결론 구조로 100자 내로 요약해줘:\n\n"
         f"{article_text}\n\n"
-        "형식: 서론 - ..., 중론 - ..., 결론 - ..."
+        "형식: - ...,  - ...,  - ..."
     )
 
     response = client.chat.completions.create(
@@ -48,6 +47,6 @@ def summarize_text(article_text):
     return response.choices[0].message["content"]
 
 # 5️⃣ 실행
-article_text = fetch_article_text(msg)
+article_text = fetch_article_text(url)
 summary = summarize_text(article_text)
 print(summary)
