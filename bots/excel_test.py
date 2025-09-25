@@ -11,6 +11,9 @@ if not api_key:
     raise ValueError("환경 변수에 'GEMINI_API_KEY'가 설정되어 있지 않습니다.")
 
 def excel(chat: ChatContext):
+    # Gemini API 설정
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")  # 원하는 모델 선택
     msg = chat.message.msg  # 메시지 꺼내기
 
     # URL 패턴 (http, https, ftp, www, 도메인 등 전부 감지)
@@ -25,6 +28,18 @@ def excel(chat: ChatContext):
 
     if url_pattern.search(msg):
         print("메시지가 URL입니다.",msg)
+        prompt = f"""
+        {msg} 링크 요약해줘.
+        답변은
+        -(서론) 20자 내
+        -(중론) 20자 내
+        -(결론) 20자 내
+        괄호 안의 '서론', '중론', '결론' 텍스트는 생략하고
+        오직 요약 내용만 보여줘. """
+        # API 호출
+        response = model.generate_content(prompt)
+        # 출력
+        print(response.text.strip())
     
         # URL일 때 실행할 코드
     else:
