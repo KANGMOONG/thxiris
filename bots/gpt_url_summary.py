@@ -7,18 +7,36 @@ client = OpenAI()
 
 def fetch_article_text(url: str) -> str:
     """
-    URL에서 본문 텍스트만 추출
+    URL에서 본문 텍스트만 추출 (네이버 뉴스 포함)
     """
     headers = {"User-Agent": "Mozilla/5.0"}
     res = requests.get(url, headers=headers, timeout=10)
     res.raise_for_status()
     soup = BeautifulSoup(res.text, "html.parser")
 
-    # 기본적으로 기사 본문 추출 (p태그)
-    paragraphs = [p.get_text(strip=True) for p in soup.find_all("p")]
-    text = "\n".join(paragraphs)
+    # 네이버 뉴스 본문 (기사마다 클래스명이 다르지만 articleBodyContents가 대부분)
+    candidates = [
+        "#newsct_article",               # 최근 네이버 뉴스 본문 영역 id
+        ".go_trans._article_content",    # 이전 버전 클래스명
+        ".article_body",                 # 일부 언론사 클래스명
+        "article",                       # 일반 article 태그
+        "p"                              # fallback
+    ]
 
-    return text if text else res.text[:3000]  # 내용 없으면 HTML 일부 반환
+    text = ""
+    for selector in candidates:
+        selected = soup.select(selector)
+        if selected:
+            paragraphs = [s.get_text(" ", strip=True) for s in selected]
+            text = "\n".join(paragraphs)
+            break
+
+    if not text:  # 아무것도 못 찾으면 전체 텍스트 fallback
+        text = soup.get_text(" ", strip=True)
+
+    # 너무 길면 앞부분만
+    return text[:4000]
+
 
 
 def summarize_text(article_text: str) -> str:
