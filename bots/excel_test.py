@@ -13,7 +13,7 @@ if not api_key:
 def excel(chat: ChatContext):
     # Gemini API 설정
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")  # 원하는 모델 선택
+    model = genai.GenerativeModel("gemini-2.5-flash")  # 원하는 모델 선택
     msg = chat.message.msg  # 메시지 꺼내기
 
     # URL 패턴 (http, https, ftp, www, 도메인 등 전부 감지)
