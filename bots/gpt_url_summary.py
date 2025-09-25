@@ -1,62 +1,70 @@
-import re
 import requests
-from bs4 import BeautifulSoup  # 웹페이지 텍스트 추출용 (pip install beautifulsoup4)
+import re
+from bs4 import BeautifulSoup
 from openai import OpenAI
 
-# OpenAI 클라이언트 생성 (환경변수 OPENAI_API_KEY 필요)
 client = OpenAI()
 
 def fetch_article_text(url: str) -> str:
     """
-    URL에서 기사/본문 텍스트를 가져오는 함수
+    URL에서 본문 텍스트만 추출
     """
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-        soup = BeautifulSoup(res.text, "html.parser")
-        # 가장 간단히 <body> 텍스트 전체 추출
-        text = soup.get_text(separator=" ", strip=True)
-        return text
-    except Exception as e:
-        print("기사 텍스트 가져오기 실패:", e)
-        return ""
+    headers = {"User-Agent": "Mozilla/5.0"}
+    res = requests.get(url, headers=headers, timeout=10)
+    res.raise_for_status()
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    # 기본적으로 기사 본문 추출 (p태그)
+    paragraphs = [p.get_text(strip=True) for p in soup.find_all("p")]
+    text = "\n".join(paragraphs)
+
+    return text if text else res.text[:3000]  # 내용 없으면 HTML 일부 반환
+
 
 def summarize_text(article_text: str) -> str:
     """
-    OpenAI GPT 모델을 이용해 텍스트 요약
+    기사 내용을 GPT로 요약
     """
-    if not article_text:
-        return "요약할 텍스트가 없습니다."
+    prompt = f"""
+다음 텍스트를 읽고
+서론, 본론, 결론 구조로 요약해줘.
+각 항목은 20자 이내로 작성하고
+다음 형식으로 출력해줘:
+
+-
+-
+-
+
+텍스트:
+\"\"\"{article_text}\"\"\"
+"""
 
     response = client.chat.completions.create(
-        model="gpt-4o",  # 사용 중인 모델명
-        messages=[
-            {"role": "system", "content": "아래 텍스트 서론,본론,결론 구조로 3줄 한국어로 간결하게 요약해줘."},
-            {"role": "user", "content": article_text}
-        ],
-        # max_tokens → max_completion_tokens로 교체
-        max_completion_tokens=500
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        max_completion_tokens=200  # 최신 파라미터 사용
     )
 
     return response.choices[0].message.content.strip()
 
+
 def url_summary(chat):
     """
-    chat.message.msg에서 URL을 감지 후
-    본문을 가져와 요약을 출력
+    ChatContext에서 URL 감지 → 요약
     """
     msg = chat.message.msg
-    url_pattern = re.compile(r'https?://[^\s]+')
+    # URL 정규식
+    url_pattern = re.compile(r'(https?://[^\s]+)')
+    url_match = url_pattern.search(msg)
 
-    if url_pattern.search(msg):
-        url = url_pattern.search(msg).group()
+    if url_match:
+        url = url_match.group(0)
         print("메시지가 URL입니다.", url)
-
-        # 기사 내용 가져오기
-        article_text = fetch_article_text(url)
-        # 요약 생성
-        summary = summarize_text(article_text)
-        print("요약 결과:", summary)
+        try:
+            article_text = fetch_article_text(url)
+            summary = summarize_text(article_text)
+            print(summary)  # 요약 출력
+        except Exception as e:
+            print("오류 발생:", e)
     else:
-        print("URL이 감지되지 않았습니다:", msg)
+        print("메시지가 URL이 아닙니다.", msg)
