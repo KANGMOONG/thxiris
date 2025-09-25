@@ -4,7 +4,7 @@ from iris.bot.models import ErrorContext
 from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
 from iris.kakaolink import IrisLink
-from message_check import msgcheck
+from bots.message_check import msgcheck
 
 from bots.detect_nickname_change import detect_nickname_change
 import sys, threading, re
