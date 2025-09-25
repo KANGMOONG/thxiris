@@ -25,7 +25,7 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    excel(chat)
+   # excel(chat)
     try:
         match chat.message.command:
             
