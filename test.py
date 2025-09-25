@@ -4,7 +4,7 @@ from iris.bot.models import ErrorContext
 from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
 from iris.kakaolink import IrisLink
-from bots.message_check import msgcheck
+from bots.message_check2 import msgcheck2
 
 from bots.detect_nickname_change import detect_nickname_change
 import sys, threading, re
@@ -17,7 +17,7 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    msgcheck(chat)
+    msgcheck2(chat)
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
