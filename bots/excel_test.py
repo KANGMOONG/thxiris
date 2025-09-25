@@ -40,7 +40,7 @@ def excel(chat: ChatContext):
         response = model.generate_content(prompt)
         # 출력
         print(response.text.strip())
-    
+        chat.reply(response.text.strip())
         # URL일 때 실행할 코드
     else:
         print("메시지가 URL이 아닙니다.",msg)
