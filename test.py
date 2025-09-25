@@ -1,23 +1,14 @@
 import time
 from iris import ChatContext, Bot
 from iris.bot.models import ErrorContext
-from bots.gemini import get_gemini
-from bots.pyeval import python_eval, real_eval
-from bots.stock import create_stock_image
-from bots.imagen import get_imagen
-from bots.lyrics import get_lyrics, find_lyrics
-from bots.replyphoto import reply_photo
-from bots.text2image import draw_text
-from bots.coin import get_coin_info
-from bots.test_img import get_img
-from bots.excel_test import excel
-
 from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
 from iris.kakaolink import IrisLink
+from message_check import msgcheck
 
 from bots.detect_nickname_change import detect_nickname_change
-import sys, threading
+import sys, threading, re
+
 
 
 iris_url = sys.argv[1]
@@ -26,7 +17,7 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    print("메세지가 들어옵니다")
+    msgcheck(chat)
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
