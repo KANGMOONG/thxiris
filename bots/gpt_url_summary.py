@@ -5,15 +5,16 @@ from openai import OpenAI
 from iris import ChatContext
 from iris.decorators import *
 
+def url_summary(chat):
 # 1️⃣ OpenAI API 키 로드
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
+ api_key = os.getenv("OPENAI_API_KEY")
+ client = OpenAI(api_key=api_key)
 
 # 2️⃣ 요약할 URL
-url = chat.message.msg
+ url = chat.message.msg
 
 # 3️⃣ HTML 가져와서 본문 텍스트 추출
-def fetch_article_text(url):
+ def fetch_article_text(url):
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -28,7 +29,7 @@ def fetch_article_text(url):
         return ""
 
 # 4️⃣ GPT-5 nano로 서론·본론·결론 100자 내 요약
-def summarize_text(article_text):
+ def summarize_text(article_text):
     if not article_text:
         return "본문 내용을 가져오지 못했습니다."
 
@@ -47,6 +48,6 @@ def summarize_text(article_text):
     return response.choices[0].message["content"]
 
 # 5️⃣ 실행
-article_text = fetch_article_text(url)
-summary = summarize_text(article_text)
-print(summary)
+ article_text = fetch_article_text(url)
+ summary = summarize_text(article_text)
+ print(summary)
