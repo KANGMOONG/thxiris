@@ -29,13 +29,8 @@ def excel(chat: ChatContext):
     if url_pattern.search(msg):
         print("메시지가 URL입니다.",msg)
         prompt = f"""
-        {msg} 링크 요약해줘.
-        답변은
-        -(서론) 20자 내
-        -(중론) 20자 내
-        -(결론) 20자 내
-        괄호 안의 '서론', '중론', '결론' 텍스트는 생략하고
-        오직 요약 내용만 보여줘. """
+        {msg} 링크 50자 내로 요약해줘.
+        """
         # API 호출
         response = model.generate_content(prompt)
         # 출력
