@@ -6,7 +6,7 @@ import requests
 
 
 
-def msgcheck2(chat: ChatContext):
+def checktest(chat: ChatContext):
     msg = chat.message.msg  # 메시지 꺼내기
 
     # URL 패턴 (http, https, ftp, www, 도메인 등 전부 감지)
