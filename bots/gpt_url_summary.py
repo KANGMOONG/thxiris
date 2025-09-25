@@ -1,5 +1,6 @@
 import re
 import time
+import tempfile
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -11,24 +12,24 @@ client = OpenAI()
 def fetch_article_text(url: str, wait_time=3) -> str:
     """
     Selenium으로 URL 접속 후 본문 텍스트 추출
-    모든 URL에 대해 최대한 안정적으로 본문 가져오기
+    모든 URL에서 최대한 안정적으로 본문 가져오기
     """
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
-    # user-data-dir 제거 → 기존 세션 충돌 방지
+
+    # 매번 고유한 임시 user-data-dir 지정 → 세션 충돌 방지
+    temp_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={temp_dir}")
 
     driver = webdriver.Chrome(options=options)
     text = ""
     try:
         driver.get(url)
         time.sleep(wait_time)  # 페이지 로드 대기
-
-        # 전체 body 텍스트 가져오기
         body = driver.find_element(By.TAG_NAME, "body")
         text = body.text
-
     except Exception as e:
         print("본문 가져오기 오류:", e)
     finally:
@@ -38,10 +39,10 @@ def fetch_article_text(url: str, wait_time=3) -> str:
 
 def summarize_text(article_text: str) -> str:
     """
-    GPT로 기사 내용을 서론/본론/결론 구조로 요약
+    GPT로 기사 내용을 핵심 위주로 요약
     """
     if not article_text:
-        return "- 본문 없음\n- \n- "
+        return "- 본문 없음\n- \n- \n- "
 
     prompt = f"""
 다음 텍스트를 읽고
@@ -61,7 +62,7 @@ def summarize_text(article_text: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_completion_tokens=200
+        max_completion_tokens=300
     )
 
     return response.choices[0].message.content.strip()
