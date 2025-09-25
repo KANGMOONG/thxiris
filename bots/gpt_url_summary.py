@@ -9,33 +9,27 @@ from openai import OpenAI
 client = OpenAI()
 
 def fetch_article_text(url: str, wait_time=3) -> str:
-    """
-    Selenium으로 URL 접속 후 본문 텍스트 추출
-    모든 URL에 대해 최대한 안정적으로 본문 가져오기
-    """
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
-    options.add_argument("--lang=ko_KR")
+
+    # 유니크한 임시 디렉토리 지정
+    temp_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={temp_dir}")
 
     driver = webdriver.Chrome(options=options)
     text = ""
     try:
         driver.get(url)
-        time.sleep(wait_time)  # 페이지 로드 대기
-
-        # 본문 추출 시도
+        time.sleep(wait_time)
         body = driver.find_element(By.TAG_NAME, "body")
         text = body.text
-
     except Exception as e:
         print("본문 가져오기 오류:", e)
     finally:
         driver.quit()
-
-    # 너무 길면 앞부분만
-    return text[:4000] if text else ""
+    return text[:4000]
 
 def summarize_text(article_text: str) -> str:
     """
