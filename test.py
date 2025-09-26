@@ -23,9 +23,9 @@ bot = Bot(iris_url)
 def on_message(chat: ChatContext):
     url=None
     if chat.raw.get('chat_id') == '446920784776967':
-        url=url_summary(chat)
+        printsummary=url_summary(chat)
     #if url is not None:
-        url_summary(chat)
+        print(printsummary)
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
