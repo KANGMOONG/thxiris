@@ -1,46 +1,60 @@
 import re
 import time
 import tempfile
+import requests
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from openai import OpenAI
 
 # OpenAI 클라이언트 (환경변수 OPENAI_API_KEY 필요)
 client = OpenAI()
 
 
-def fetch_article_content(url: str, wait_time=3) -> dict:
+def try_requests_first(url: str, timeout=3) -> dict | None:
     """
-    웹페이지에서 제목과 본문 텍스트를 추출
-    네이버 블로그 포함 (iframe 대응)
+    requests + BeautifulSoup으로 간단한 기사 구조 빠르게 추출
+    """
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(url, headers=headers, timeout=timeout)
+        if not resp.ok or "text/html" not in resp.headers.get("Content-Type", ""):
+            return None
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        title = soup.title.text.strip() if soup.title else ""
+        body = soup.get_text(separator="\n")
+        return {"title": title, "body": body[:4000]}
+    except Exception as e:
+        print("⚠️ requests로 본문 추출 실패:", e)
+        return None
+
+
+def fetch_with_selenium(url: str, wait_time=3) -> dict:
+    """
+    Selenium으로 기사 본문 및 제목 추출 (네이버 블로그 포함)
     """
     options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--blink-settings=imagesEnabled=false")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-default-apps")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--mute-audio")
 
-    # 필수 실행 옵션
-    options.add_argument("--headless")  # 브라우저 UI 없이 실행
-    options.add_argument("--disable-gpu")  # GPU 가속 비활성화
-    options.add_argument("--no-sandbox")  # 샌드박스 기능 비활성화
-    options.add_argument("--disable-dev-shm-usage")  # /dev/shm 대신 디스크 사용
-    options.add_argument("--single-process")  # 단일 프로세스 실행
-    options.add_argument("--disable-software-rasterizer")  # CPU 기반 렌더링 제거
-
-    # 렌더링 최적화 옵션
-    options.add_argument("--blink-settings=imagesEnabled=false")  # 이미지 비활성화
-    options.add_argument("--disable-extensions")  # 확장 기능 비활성화
-    options.add_argument("--disable-default-apps")  # 기본 앱 비활성화
-    options.add_argument("--disable-popup-blocking")  # 팝업 차단 비활성화
-    options.add_argument("--disable-infobars")  # 자동화 표시 제거
-    options.add_argument("--disable-notifications")  # 알림 차단
-    options.add_argument("--mute-audio")  # 오디오 비활성화
-
-    # 매번 고유한 임시 user-data-dir 지정 → 세션 충돌 방지
     temp_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={temp_dir}")
 
     driver = webdriver.Chrome(options=options)
 
-    # 리소스 차단: 이미지, 폰트, CSS 등
+    # 리소스 차단
     driver.execute_cdp_cmd('Network.enable', {})
     driver.execute_cdp_cmd('Network.setBlockedURLs', {
         "urls": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.css", "*.woff", "*.ttf", "*.svg"]
@@ -51,39 +65,54 @@ def fetch_article_content(url: str, wait_time=3) -> dict:
 
     try:
         driver.get(url)
-        time.sleep(wait_time)
 
-        # 제목 추출
+        WebDriverWait(driver, wait_time).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
+
         title = driver.title.strip()
 
-        # 네이버 블로그 처리 (iframe 안으로 들어가야 함)
         if "blog.naver.com" in url:
             try:
+                WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.ID, "mainFrame"))
+                )
                 iframe = driver.find_element(By.ID, "mainFrame")
                 driver.switch_to.frame(iframe)
-                time.sleep(1)
+                time.sleep(0.5)
 
                 try:
                     article = driver.find_element(By.CLASS_NAME, "se-main-container")
                 except:
-                    article = driver.find_element(By.ID, "postViewArea")  # 구버전 블로그
+                    article = driver.find_element(By.ID, "postViewArea")
                 body_text = article.text.strip()
             except Exception as e:
-                print("네이버 블로그 본문 추출 실패:", e)
+                print("⚠️ 네이버 블로그 iframe 추출 실패:", e)
         else:
-            # 일반 웹사이트는 body 텍스트 추출
             body = driver.find_element(By.TAG_NAME, "body")
             body_text = body.text.strip()
 
     except Exception as e:
-        print("본문 또는 제목 가져오기 오류:", e)
+        print("❌ Selenium 본문 추출 오류:", e)
     finally:
         driver.quit()
 
-    return {
-        "title": title,
-        "body": body_text[:4000]  # 최대 길이 제한
-    }
+    return {"title": title, "body": body_text[:4000]}
+
+
+def fetch_article_content(url: str) -> dict:
+    """
+    requests로 먼저 시도 후 실패 시 selenium fallback
+    (네이버 블로그는 모바일 URL로 자동 변환)
+    """
+    # 🔹 네이버 블로그 URL을 모바일 URL로 변환
+    if "blog.naver.com" in url and not url.startswith("https://m."):
+        url = url.replace("https://blog.naver.com", "https://m.blog.naver.com")
+
+    article = try_requests_first(url)
+    if article and article["body"].strip():
+        return article
+    return fetch_with_selenium(url)
 
 
 def summarize_text(article: dict) -> str:
@@ -100,7 +129,7 @@ def summarize_text(article: dict) -> str:
 제목과 본문을 보고
 기사 내용을 핵심만 요약해줘.
 누가 뭘 어떻게 했는지 구체적으로.
-기승전결이면 더 좋고, 오해 없게 요약해줘.
+기승전결이면 더 좋고, 정확하게 요약해줘.
 
 - 각 항목은 40자 이내, 음슴체로
 - 출력은 '-' 다섯 줄
@@ -113,7 +142,7 @@ def summarize_text(article: dict) -> str:
 """
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  # 필요시 gpt-4o 또는 gpt-3.5-turbo로 변경 가능
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         max_completion_tokens=300
     )
@@ -121,12 +150,13 @@ def summarize_text(article: dict) -> str:
     return response.choices[0].message.content.strip()
 
 
-def url_summary(chat):
+def url_summary(chat) -> str | None:
     """
     텍스트에서 URL을 추출하고 기사 요약 수행
-    chat: 텍스트 문자열 (URL 포함)
+    chat: ChatContext 객체
     """
     msg = chat.message.msg
+    #msg = chat
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
@@ -143,5 +173,7 @@ def url_summary(chat):
             return summary
         except Exception as e:
             print("❌ 처리 중 오류 발생:", e)
+            return None
     else:
         print("❌ 메시지에 URL이 없습니다:", msg)
+        #return None
