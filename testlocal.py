@@ -1,15 +1,20 @@
-# test_runner.py
+from bots.gpt_url_summary import url_summary
 
-# 실제 사용하는 함수 불러오기
-from bots.gpt_url_summary import url_summary  # my_module.py 에 정의돼 있어야 함
+def main():
+    print("🔁 반복 테스트 모드입니다. 'exit' 입력 시 종료됩니다.")
+    while True:
+        testinput = input("\n✅ 테스트 인풋을 입력하세요: ")
+        
+        if testinput.lower() in ["exit", "quit"]:
+            print("👋 테스트를 종료합니다.")
+            break
 
-def main(testinput):
-    # gpt_url_summary가 return을 안 하고 print만 한다면,
-    # 아래처럼 처리하거나 return 받도록 수정 필요
-    testoutput = url_summary(testinput)
-    print("결과:", testoutput)
+        try:
+            testoutput = url_summary(testinput)
+            print(f"📄 출력 결과:\n{testoutput}")
+        except Exception as e:
+            print(f"❌ 에러 발생: {e}")
+
 
 if __name__ == "__main__":
-    # 여기에 테스트 인풋 직접 넣기
-    testinput = "https://example.com/some-article"
-    main(testinput)
+    main()

@@ -22,8 +22,9 @@ bot = Bot(iris_url)
 @is_not_banned
 def on_message(chat: ChatContext):
     url=None
-    url=checktest(chat)
-    if url is not None:
+    if chat.raw.chat_id='447667720037160'
+        url=url_summary(chat)
+    #if url is not None:
         url_summary(chat)
 
 if __name__ == "__main__":
