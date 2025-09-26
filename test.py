@@ -22,7 +22,7 @@ bot = Bot(iris_url)
 @is_not_banned
 def on_message(chat: ChatContext):
     url=None
-    if chat.raw.get('chat_id') in ['446920784776967', '278674834031691']:  #
+    if chat.raw.get('chat_id') in ['446920784776967', '278674834031691','252131815713011']:  #
         printsummary=url_summary(chat)
         if printsummary:  # None이나 빈 문자열이 아니면
          chat.reply(printsummary)
