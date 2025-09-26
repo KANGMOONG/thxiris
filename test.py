@@ -22,10 +22,13 @@ bot = Bot(iris_url)
 @is_not_banned
 def on_message(chat: ChatContext):
     url=None
-    if chat.raw.get('chat_id') in ['446920784776967', '278674834031691']:
+    if chat.raw.get('chat_id') in ['446920784776967']:  #, '278674834031691'
         printsummary=url_summary(chat)
-        chat.reply(printsummary)
-
+        if printsummary:  # None이나 빈 문자열이 아니면
+         chat.reply(printsummary)
+        else:
+         print("❌ 일상메세지")
+        
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
