@@ -24,6 +24,7 @@ def on_message(chat: ChatContext):
     url=None
     if chat.raw.get('chat_id') == '446920784776967':
         printsummary=url_summary(chat)
+        chat.reply(printsummary)
     #if url is not None:
         print(printsummary)
 
