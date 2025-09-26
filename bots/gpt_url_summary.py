@@ -16,15 +16,36 @@ def fetch_article_content(url: str, wait_time=3) -> dict:
     네이버 블로그 포함 (iframe 대응)
     """
     options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
+
+    # 필수 실행 옵션
+    options.add_argument("--headless")  # 브라우저 UI 없이 실행
+    options.add_argument("--disable-gpu")  # GPU 가속 비활성화
+    options.add_argument("--no-sandbox")  # 샌드박스 기능 비활성화
+    options.add_argument("--disable-dev-shm-usage")  # /dev/shm 대신 디스크 사용
+    options.add_argument("--single-process")  # 단일 프로세스 실행
+    options.add_argument("--disable-software-rasterizer")  # CPU 기반 렌더링 제거
+
+    # 렌더링 최적화 옵션
+    options.add_argument("--blink-settings=imagesEnabled=false")  # 이미지 비활성화
+    options.add_argument("--disable-extensions")  # 확장 기능 비활성화
+    options.add_argument("--disable-default-apps")  # 기본 앱 비활성화
+    options.add_argument("--disable-popup-blocking")  # 팝업 차단 비활성화
+    options.add_argument("--disable-infobars")  # 자동화 표시 제거
+    options.add_argument("--disable-notifications")  # 알림 차단
+    options.add_argument("--mute-audio")  # 오디오 비활성화
 
     # 매번 고유한 임시 user-data-dir 지정 → 세션 충돌 방지
     temp_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={temp_dir}")
 
     driver = webdriver.Chrome(options=options)
+
+    # 리소스 차단: 이미지, 폰트, CSS 등
+    driver.execute_cdp_cmd('Network.enable', {})
+    driver.execute_cdp_cmd('Network.setBlockedURLs', {
+        "urls": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.css", "*.woff", "*.ttf", "*.svg"]
+    })
+
     title = ""
     body_text = ""
 
@@ -105,8 +126,7 @@ def url_summary(chat):
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: 텍스트 문자열 (URL 포함)
     """
-    msg=chat.message.msg
-    #msg = chat
+    msg = chat.message.msg
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
