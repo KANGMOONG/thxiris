@@ -25,8 +25,7 @@ def on_message(chat: ChatContext):
     if chat.raw.get('chat_id') in ['446920784776967', '278674834031691']:
         printsummary=url_summary(chat)
         chat.reply(printsummary)
-    #if url is not None:
-        print(printsummary)
+
 
 if __name__ == "__main__":
     #닉네임감지를 사용하지 않는 경우 주석처리
