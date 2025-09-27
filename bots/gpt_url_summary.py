@@ -181,8 +181,8 @@ def url_summary(chat) -> str | None:
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: ChatContext 객체
     """
-    #msg = chat.message.msg
-    msg=chat
+    msg = chat.message.msg
+    #msg=chat
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
