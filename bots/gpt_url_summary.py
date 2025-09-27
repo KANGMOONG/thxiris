@@ -14,18 +14,6 @@ from openai import OpenAI
 client = OpenAI()
 
 
-def resolve_redirect(url: str) -> str:
-    """
-    naver.me 같은 단축 URL을 최종 URL로 변환
-    """
-    try:
-        r = requests.head(url, allow_redirects=True, timeout=3)
-        return r.url
-    except Exception as e:
-        print("⚠️ 단축 URL 리다이렉트 실패:", e)
-        return url
-
-
 def try_requests_first(url: str, timeout=3) -> dict | None:
     """
     requests + BeautifulSoup으로 간단한 기사 구조 빠르게 추출
@@ -38,15 +26,7 @@ def try_requests_first(url: str, timeout=3) -> dict | None:
 
         soup = BeautifulSoup(resp.text, "html.parser")
         title = soup.title.text.strip() if soup.title else ""
-
-        # 네이버 뉴스 기사 본문
-        news_body = soup.select_one("#dic_area")
-        if news_body:
-            body = news_body.get_text(" ", strip=True)
-        else:
-            # 기본적으로 모든 텍스트
-            body = soup.get_text(separator="\n")
-
+        body = soup.get_text(separator="\n")
         return {"title": title, "body": body[:4000]}
     except Exception as e:
         print("⚠️ requests로 본문 추출 실패:", e)
@@ -109,13 +89,8 @@ def fetch_with_selenium(url: str, wait_time=3) -> dict:
             except Exception as e:
                 print("⚠️ 네이버 블로그 iframe 추출 실패:", e)
         else:
-            # 뉴스 등 기타 페이지
-            try:
-                news_body = driver.find_element(By.ID, "dic_area")
-                body_text = news_body.text.strip()
-            except:
-                body = driver.find_element(By.TAG_NAME, "body")
-                body_text = body.text.strip()
+            body = driver.find_element(By.TAG_NAME, "body")
+            body_text = body.text.strip()
 
     except Exception as e:
         print("❌ Selenium 본문 추출 오류:", e)
@@ -130,9 +105,6 @@ def fetch_article_content(url: str) -> dict:
     requests로 먼저 시도 후 실패 시 selenium fallback
     (네이버 블로그는 모바일 URL로 자동 변환)
     """
-    # 🔹 단축 URL을 먼저 실제 URL로
-    url = resolve_redirect(url)
-
     # 🔹 네이버 블로그 URL을 모바일 URL로 변환
     if "blog.naver.com" in url and not url.startswith("https://m."):
         url = url.replace("https://blog.naver.com", "https://m.blog.naver.com")
@@ -184,8 +156,12 @@ def url_summary(chat) -> str | None:
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: ChatContext 객체
     """
-    #msg = chat.message.msg
-    msg = chat
+    # chat이 ChatContext 객체면 message.msg 꺼내기
+    if hasattr(chat, "message") and hasattr(chat.message, "msg"):
+        msg = chat.message.msg
+    else:
+        msg = chat  # 문자열이면 그대로 사용
+
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
@@ -199,10 +175,11 @@ def url_summary(chat) -> str | None:
             print("\n🔹 제목:", article.get("title", ""))
             print("🔹 요약 결과:")
             print(summary)
-            return summary  # ✅ 리턴값이 있을 때만 chat.reply에서 사용 가능
+            return summary
         except Exception as e:
             print("❌ 처리 중 오류 발생:", e)
             return None
     else:
         print("❌ 메시지에 URL이 없습니다:", msg)
         return None
+ㄴ
