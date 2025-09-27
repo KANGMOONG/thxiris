@@ -8,11 +8,40 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from urllib.parse import urlparse, parse_qs, unquote
 from openai import OpenAI
 
 # OpenAI 클라이언트 (환경변수 OPENAI_API_KEY 필요)
 client = OpenAI()
 
+def resolve_redirect_url(url: str, timeout=3) -> str:
+    """
+    단축 URL(naver.me 등)을 실제 URL로 변환
+    (link.naver.com/bridge 처리 포함)
+    """
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        # HEAD 요청으로 최종 URL 확인
+        resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
+        final_url = resp.url
+
+        # HEAD 실패하면 GET으로 재시도
+        if resp.status_code >= 400 or final_url == url:
+            resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+            final_url = resp.url
+
+        # 🔹 Naver bridge URL 처리
+        if "link.naver.com/bridge" in final_url:
+            qs = parse_qs(urlparse(final_url).query)
+            if "url" in qs:
+                decoded = unquote(qs["url"][0])
+                print("🔹 Bridge URL → 실제 URL:", decoded)
+                return decoded
+
+        return final_url
+    except Exception as e:
+        print("⚠️ 리다이렉트 URL 해석 실패:", e)
+        return url
 
 def try_requests_first(url: str, timeout=3) -> dict | None:
     """
@@ -31,7 +60,6 @@ def try_requests_first(url: str, timeout=3) -> dict | None:
     except Exception as e:
         print("⚠️ requests로 본문 추출 실패:", e)
         return None
-
 
 def fetch_with_selenium(url: str, wait_time=3) -> dict:
     """
@@ -99,7 +127,6 @@ def fetch_with_selenium(url: str, wait_time=3) -> dict:
 
     return {"title": title, "body": body_text[:4000]}
 
-
 def fetch_article_content(url: str) -> dict:
     """
     requests로 먼저 시도 후 실패 시 selenium fallback
@@ -113,7 +140,6 @@ def fetch_article_content(url: str) -> dict:
     if article and article["body"].strip():
         return article
     return fetch_with_selenium(url)
-
 
 def summarize_text(article: dict) -> str:
     """
@@ -150,22 +176,26 @@ def summarize_text(article: dict) -> str:
 
     return response.choices[0].message.content.strip()
 
-
 def url_summary(chat) -> str | None:
     """
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: ChatContext 객체
     """
-    msg = chat.message.msg
-    #msg = chat
+    #msg = chat.message.msg
+    msg=chat
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
     if url_match:
         url = url_match.group(0)
         print("✅ 메시지에서 URL 발견:", url)
+
+        # 🔹 단축 URL(리다이렉트) 풀기 + 브리지 URL 처리
+        resolved_url = resolve_redirect_url(url)
+        print("🔹 실제 URL:", resolved_url)
+
         try:
-            article = fetch_article_content(url)
+            article = fetch_article_content(resolved_url)
             summary = summarize_text(article)
 
             print("\n🔹 제목:", article.get("title", ""))
@@ -177,4 +207,4 @@ def url_summary(chat) -> str | None:
             return None
     else:
         print("❌ 메시지에 URL이 없습니다:", msg)
-        #return None
+        return None
