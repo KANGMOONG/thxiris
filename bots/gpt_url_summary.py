@@ -156,12 +156,8 @@ def url_summary(chat) -> str | None:
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: ChatContext 객체
     """
-    # chat이 ChatContext 객체면 message.msg 꺼내기
-    if hasattr(chat, "message") and hasattr(chat.message, "msg"):
-        msg = chat.message.msg
-    else:
-        msg = chat  # 문자열이면 그대로 사용
-
+    msg = chat.message.msg
+    #msg = chat
     url_pattern = re.compile(r'https?://[^\s]+')
     url_match = url_pattern.search(msg)
 
@@ -181,5 +177,4 @@ def url_summary(chat) -> str | None:
             return None
     else:
         print("❌ 메시지에 URL이 없습니다:", msg)
-        return None
-ㄴ
+        #return None
