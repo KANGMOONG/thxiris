@@ -1,4 +1,5 @@
-from bots.gpt_url_summary import url_summary
+#from bots.gpt_url_summary import url_summary
+from bots.gpt_url_summary_test import url_summary
 
 def main():
     print("🔁 반복 테스트 모드입니다. 'exit' 입력 시 종료됩니다.")
