@@ -2,180 +2,19 @@ import re
 import time
 import tempfile
 import requests
-import random
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from urllib.parse import urlparse, parse_qs, unquote, quote
+from urllib.parse import urlparse, parse_qs, unquote
 from openai import OpenAI
 
 # OpenAI 클라이언트 (환경변수 OPENAI_API_KEY 필요)
 client = OpenAI()
 
-def extract_tweet_id(twitter_url):
-    """Twitter/X URL에서 트윗 ID 추출"""
-    patterns = [
-        r'/status/(\d+)',
-        r'status/(\d+)',
-        r'twitter\.com/\w+/status/(\d+)',
-        r'x\.com/\w+/status/(\d+)'
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, twitter_url)
-        if match:
-            return match.group(1)
-    return None
-
-def get_username_from_url(twitter_url):
-    """Twitter URL에서 사용자명 추출"""
-    patterns = [
-        r'twitter\.com/([^/]+)/',
-        r'x\.com/([^/]+)/',
-        r'twitter\.com/([^/]+)$',
-        r'x\.com/([^/]+)$'
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, twitter_url)
-        if match:
-            return match.group(1)
-    return None
-
-def fetch_via_nitter(twitter_url):
-    """Nitter 인스턴스를 통해 트윗 내용 추출"""
-    nitter_instances = [
-        "https://nitter.net",
-        "https://nitter.it", 
-        "https://nitter.pussthecat.org",
-        "https://nitter.fdn.fr",
-        "https://nitter.1d4.us"
-    ]
-    
-    tweet_id = extract_tweet_id(twitter_url)
-    username = get_username_from_url(twitter_url)
-    
-    if not tweet_id or not username:
-        return None
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive'
-    }
-    
-    for instance in nitter_instances:
-        try:
-            print(f"🐦 Nitter 인스턴스 시도: {instance}")
-            nitter_url = f"{instance}/{username}/status/{tweet_id}"
-            
-            response = requests.get(nitter_url, headers=headers, timeout=8)
-            if response.status_code != 200:
-                print(f"❌ {instance} - HTTP {response.status_code}")
-                continue
-                
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Nitter에서 트윗 내용 추출
-            tweet_content = soup.find('div', class_='tweet-content')
-            if not tweet_content:
-                tweet_content = soup.find('div', class_='tweet-body')
-                
-            if tweet_content:
-                title = f"@{username}의 트윗"
-                body = tweet_content.get_text().strip()
-                
-                # 메타데이터 추가
-                timestamp = soup.find('span', class_='tweet-date')
-                if timestamp:
-                    body = f"작성일: {timestamp.get_text().strip()}\n\n{body}"
-                
-                print(f"✅ {instance}에서 성공적으로 추출")
-                return {"title": title, "body": body}
-            else:
-                print(f"❌ {instance} - 트윗 내용 찾을 수 없음")
-                
-        except Exception as e:
-            print(f"❌ {instance} - 오류: {e}")
-            continue
-            
-        # 요청 간격 조절
-        time.sleep(random.uniform(1, 2))
-    
-    return None
-
-def fetch_via_cached_versions(twitter_url):
-    """캐시된 버전에서 트윗 검색"""
-    try:
-        print("🗄️ Google Cache 시도 중...")
-        cache_url = f"https://webcache.googleusercontent.com/search?q=cache:{quote(twitter_url)}"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        
-        response = requests.get(cache_url, headers=headers, timeout=10)
-        if response.status_code == 200 and len(response.text) > 1000:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # 트윗 같은 텍스트 패턴 찾기
-            text_elements = soup.find_all(['div', 'span'], string=re.compile(r'.{20,300}'))
-            
-            for element in text_elements:
-                text = element.get_text().strip()
-                if (20 < len(text) < 500 and 
-                    not any(skip in text.lower() for skip in ['cookie', 'login', 'privacy', 'terms', 'follow'])):
-                    print("✅ Google Cache에서 성공")
-                    return {"title": "캐시된 트윗", "body": text}
-    except Exception as e:
-        print(f"⚠️ 캐시 검색 실패: {e}")
-    
-    return None
-
-def fetch_twitter_via_third_party(twitter_url):
-    """여러 서드파티 방법을 순차적으로 시도하여 트윗 내용 추출"""
-    print(f"🐦 서드파티 서비스로 트윗 추출 시작: {twitter_url}")
-    
-    # 순차적으로 시도할 방법들
-    methods = [
-        ("Nitter 인스턴스", lambda: fetch_via_nitter(twitter_url)),
-        ("캐시된 버전", lambda: fetch_via_cached_versions(twitter_url))
-    ]
-    
-    for method_name, method_func in methods:
-        print(f"\n🔄 {method_name} 방법 시도...")
-        try:
-            result = method_func()
-            if result and result["body"] and len(result["body"]) > 20 and "실패" not in result["title"]:
-                print(f"✅ {method_name}로 성공!")
-                return result
-        except Exception as e:
-            print(f"❌ {method_name} 방법 오류: {e}")
-        
-        # 요청 간격 조절
-        time.sleep(random.uniform(2, 4))
-    
-    # 모든 방법 실패
-    return {
-        "title": "모든 서드파티 방법 실패", 
-        "body": f"""트윗 추출을 위해 다음 방법들을 모두 시도했지만 실패했습니다:
-
-🔍 시도한 방법들:
-- Nitter 인스턴스 (여러 서버)
-- 캐시된 버전 검색
-
-🔗 원본 링크: {twitter_url}
-
-💡 대안:
-1. 트윗을 직접 열어서 내용 복사
-2. 스크린샷을 찍어서 이미지로 분석 요청
-3. 유료 Twitter API 구독 고려"""
-    }
-
-def resolve_redirect_url(url, timeout=3):
+def resolve_redirect_url(url: str, timeout=3) -> str:
     """
     단축 URL(naver.me 등)을 실제 URL로 변환
     (link.naver.com/bridge 처리 포함)
@@ -236,7 +75,7 @@ def resolve_redirect_url(url, timeout=3):
         print(f"⚠️ 리다이렉트 URL 해석 실패: {e}")
         return url
 
-def try_requests_first(url, timeout=5):
+def try_requests_first(url: str, timeout=5) -> dict | None:
     """
     requests + BeautifulSoup으로 간단한 기사 구조 빠르게 추출
     개선된 버전: 더 구체적인 본문 추출 시도
@@ -332,7 +171,7 @@ def try_requests_first(url, timeout=5):
         print(f"⚠️ requests로 본문 추출 실패: {e}")
         return None
 
-def fetch_with_selenium(url, wait_time=5):
+def fetch_with_selenium(url: str, wait_time=5) -> dict:
     """
     Selenium으로 기사 본문 및 제목 추출 (개선된 버전)
     봇 차단 우회를 위한 추가 설정
@@ -470,83 +309,13 @@ def fetch_with_selenium(url, wait_time=5):
 
     return {"title": title, "body": body_text[:4000]}
 
-def fetch_twitter_content(url):
-    """
-    X(Twitter) 콘텐츠 추출 - 서드파티 서비스 우선 시도
-    """
-    print("🐦 X(Twitter) 링크 감지 - 서드파티 서비스 시도")
-    
-    # 먼저 서드파티 서비스들 시도
-    third_party_result = fetch_twitter_via_third_party(url)
-    if (third_party_result["body"] and 
-        len(third_party_result["body"]) > 20 and 
-        "실패" not in third_party_result["title"]):
-        return third_party_result
-    
-    # 서드파티 실패시 기존 Selenium 방법도 시도
-    print("🔄 서드파티 실패 - Selenium 방법으로 재시도")
-    return fetch_twitter_selenium_fallback(url)
-
-def fetch_twitter_selenium_fallback(url):
-    """기존 Selenium 방법 (백업용)"""
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-    
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-
-    driver = webdriver.Chrome(options=options)
-    
-    try:
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        driver.get(url)
-        
-        WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        time.sleep(3)
-        
-        # 로그인 요구 체크
-        if any(keyword in driver.page_source.lower() for keyword in ['log in', '로그인', 'sign in']):
-            return {"title": "로그인 필요", "body": "X(Twitter)는 로그인이 필요합니다."}
-        
-        # 트윗 내용 추출 시도
-        selectors = ['[data-testid="tweetText"]', '[role="article"]']
-        
-        for selector in selectors:
-            try:
-                elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                if elements:
-                    text = elements[0].text.strip()
-                    if len(text) > 10:
-                        return {"title": "Selenium 트윗", "body": text}
-            except:
-                continue
-        
-        return {"title": "Selenium 실패", "body": "Selenium으로도 트윗 내용을 추출할 수 없습니다."}
-        
-    except Exception as e:
-        return {"title": "Selenium 오류", "body": f"Selenium 실행 중 오류: {str(e)}"}
-    finally:
-        driver.quit()
-
-def fetch_article_content(url):
+def fetch_article_content(url: str) -> dict:
     """
     requests로 먼저 시도 후 실패 시 selenium fallback
     (네이버 블로그는 모바일 URL로 자동 변환)
     봇 차단 감지 시 원본 URL로 직접 접근
-    X(Twitter) 특별 처리 포함
     """
     original_url = url
-    
-    # 🔹 X(Twitter) 특별 처리
-    if "x.com" in url or "twitter.com" in url:
-        print("🐦 X(Twitter) 링크 감지 - 특별 처리 시도")
-        return fetch_twitter_content(url)
     
     # 🔹 네이버 블로그 URL을 모바일 URL로 변환
     if "blog.naver.com" in url and not url.startswith("https://m."):
@@ -577,7 +346,7 @@ def fetch_article_content(url):
     
     return selenium_result
 
-def summarize_text(article):
+def summarize_text(article: dict) -> str:
     """
     GPT로 기사 내용을 핵심 위주로 요약 (제목 포함)
     """
@@ -615,7 +384,7 @@ def summarize_text(article):
         print(f"❌ GPT 요약 실패: {e}")
         return f"✅ 요약\n- 제목: {title[:30]}\n- 본문 길이: {len(body)}글자\n- GPT 요약 실패\n- 직접 확인 필요\n- \n- "
 
-def url_summary(chat):
+def url_summary(chat) -> str | None:
     """
     텍스트에서 URL을 추출하고 기사 요약 수행
     chat: ChatContext 객체 또는 문자열
@@ -653,6 +422,6 @@ def url_summary(chat):
         return None
 
 # 테스트용 함수
-def test_url(url):
+def test_url(url: str):
     """단일 URL 테스트용 함수"""
     return url_summary(url)
