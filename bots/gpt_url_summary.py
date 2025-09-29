@@ -18,11 +18,18 @@ def resolve_redirect_url(url: str, timeout=3) -> str:
     """
     단축 URL(naver.me 등)을 실제 URL로 변환
     (link.naver.com/bridge 처리 포함)
+    에러 페이지나 봇 차단 감지 시 원본 URL 반환
     """
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.8,en-US;q=0.5,en;q=0.3',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+            'Referer': 'https://www.google.com/',
         }
+        
         # HEAD 요청으로 최종 URL 확인
         resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
         final_url = resp.url
@@ -32,6 +39,21 @@ def resolve_redirect_url(url: str, timeout=3) -> str:
             resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
             final_url = resp.url
 
+        # 🔹 에러 페이지나 봇 차단 감지
+        error_indicators = [
+            'error.html',
+            'blocked',
+            'forbidden',
+            'access-denied',
+            'se-cu.com/ndsoft',  # 특정 에러 페이지
+            '404', '403', '500'
+        ]
+        
+        for indicator in error_indicators:
+            if indicator in final_url.lower():
+                print(f"🚫 에러 페이지 감지: {final_url} → 원본 URL 사용")
+                return url
+
         # 🔹 Naver bridge URL 처리
         if "link.naver.com/bridge" in final_url:
             qs = parse_qs(urlparse(final_url).query)
@@ -40,9 +62,17 @@ def resolve_redirect_url(url: str, timeout=3) -> str:
                 print("🔹 Bridge URL → 실제 URL:", decoded)
                 return decoded
 
+        # 도메인이 완전히 바뀐 경우 (단축URL이 아닌 경우) 의심
+        original_domain = urlparse(url).netloc
+        final_domain = urlparse(final_url).netloc
+        
+        if original_domain != final_domain and not any(short in original_domain for short in ['bit.ly', 'tinyurl', 'naver.me', 't.co']):
+            print(f"🚫 의심스러운 도메인 변경: {original_domain} → {final_domain}, 원본 URL 사용")
+            return url
+
         return final_url
     except Exception as e:
-        print("⚠️ 리다이렉트 URL 해석 실패:", e)
+        print(f"⚠️ 리다이렉트 URL 해석 실패: {e}")
         return url
 
 def try_requests_first(url: str, timeout=5) -> dict | None:
@@ -144,6 +174,7 @@ def try_requests_first(url: str, timeout=5) -> dict | None:
 def fetch_with_selenium(url: str, wait_time=5) -> dict:
     """
     Selenium으로 기사 본문 및 제목 추출 (개선된 버전)
+    봇 차단 우회를 위한 추가 설정
     """
     options = Options()
     options.add_argument("--headless")
@@ -156,14 +187,24 @@ def fetch_with_selenium(url: str, wait_time=5) -> dict:
     options.add_argument("--disable-notifications")
     options.add_argument("--mute-audio")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-web-security")
+    options.add_argument("--allow-running-insecure-content")
     
     # 더 현실적인 User-Agent 설정
-    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+    # 봇 감지 우회
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
 
     temp_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={temp_dir}")
 
     driver = webdriver.Chrome(options=options)
+    
+    # 봇 감지 우회 스크립트
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
     title = ""
     body_text = ""
@@ -178,7 +219,13 @@ def fetch_with_selenium(url: str, wait_time=5) -> dict:
         )
         
         # 추가 대기 (동적 콘텐츠 로드)
-        time.sleep(2)
+        time.sleep(3)
+
+        # 현재 URL 확인 (리다이렉트 감지)
+        current_url = driver.current_url
+        if 'error.html' in current_url or 'blocked' in current_url:
+            print(f"🚫 에러 페이지로 리다이렉트됨: {current_url}")
+            return {"title": "접근 차단됨", "body": "사이트에서 봇 접근을 차단하고 있습니다."}
 
         title = driver.title.strip()
         print(f"📄 페이지 제목: {title}")
@@ -202,16 +249,20 @@ def fetch_with_selenium(url: str, wait_time=5) -> dict:
             except Exception as e:
                 print(f"⚠️ 네이버 블로그 iframe 추출 실패: {e}")
         else:
-            # 일반 사이트 처리 - 다양한 선택자 시도
+            # 일반 사이트 처리 - press9.kr 특화 선택자 추가
             article_selectors = [
+                "#article-view-content-div",  # press9.kr 전용
+                ".article_txt",               # press9.kr 전용
+                ".news_txt",                  # press9.kr 전용  
                 "article",
                 ".article-content",
                 ".article-body", 
                 ".news-content",
                 ".post-content",
                 ".content",
-                "#article-view-content-div",
-                ".view-content"
+                ".view-content",
+                ".article_view",
+                ".news_view"
             ]
             
             for selector in article_selectors:
@@ -231,11 +282,25 @@ def fetch_with_selenium(url: str, wait_time=5) -> dict:
                 except:
                     continue
             
-            # 위 방법으로 본문을 찾지 못한 경우
+            # 위 방법으로 본문을 찾지 못한 경우 - 페이지 소스 확인
             if not body_text or len(body_text) < 100:
-                body = driver.find_element(By.TAG_NAME, "body")
-                body_text = body.text.strip()
-                print(f"📝 body 전체에서 추출: {len(body_text)}글자")
+                print("🔍 페이지 소스 분석 중...")
+                page_source = driver.page_source
+                
+                # 페이지에 실제 기사 내용이 있는지 확인
+                if len(page_source) < 1000:
+                    print("⚠️ 페이지 소스가 너무 짧음 - 차단되었을 가능성")
+                    return {"title": title or "차단됨", "body": "페이지 내용이 로드되지 않음"}
+                
+                # BeautifulSoup으로 재분석
+                soup = BeautifulSoup(page_source, 'html.parser')
+                for unwanted in soup.find_all(['script', 'style', 'nav', 'header', 'footer', 'aside']):
+                    unwanted.decompose()
+                
+                body_text = soup.get_text(separator='\n')
+                lines = [line.strip() for line in body_text.split('\n') if line.strip() and len(line.strip()) > 10]
+                body_text = '\n'.join(lines)
+                print(f"📝 전체 페이지에서 추출: {len(body_text)}글자")
 
     except Exception as e:
         print(f"❌ Selenium 본문 추출 오류: {e}")
@@ -248,7 +313,10 @@ def fetch_article_content(url: str) -> dict:
     """
     requests로 먼저 시도 후 실패 시 selenium fallback
     (네이버 블로그는 모바일 URL로 자동 변환)
+    봇 차단 감지 시 원본 URL로 직접 접근
     """
+    original_url = url
+    
     # 🔹 네이버 블로그 URL을 모바일 URL로 변환
     if "blog.naver.com" in url and not url.startswith("https://m."):
         url = url.replace("https://blog.naver.com", "https://m.blog.naver.com")
@@ -260,8 +328,23 @@ def fetch_article_content(url: str) -> dict:
         print("✅ requests로 성공적으로 추출")
         return article
     
+    # requests 실패 시 원본 URL로도 시도
+    if url != original_url:
+        print(f"🔍 1-2단계: 원본 URL로 requests 재시도 - {original_url}")
+        article = try_requests_first(original_url)
+        if article and article["body"].strip() and len(article["body"]) > 100:
+            print("✅ 원본 URL로 requests 성공")
+            return article
+    
     print("🔍 2단계: Selenium으로 재시도")
-    return fetch_with_selenium(url)
+    selenium_result = fetch_with_selenium(original_url)  # 원본 URL 사용
+    
+    # Selenium도 실패하고 변환된 URL이 있다면 그것도 시도
+    if (not selenium_result["body"] or len(selenium_result["body"]) < 100) and url != original_url:
+        print("🔍 2-2단계: 변환된 URL로 Selenium 재시도")
+        selenium_result = fetch_with_selenium(url)
+    
+    return selenium_result
 
 def summarize_text(article: dict) -> str:
     """
