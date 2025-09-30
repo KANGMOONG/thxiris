@@ -296,6 +296,7 @@ def summarize_text(article: dict) -> str:
 제목:
 \"\"\"{title}\"\"\"
 
+
 본문:
 \"\"\"{body}\"\"\"
 """
@@ -318,10 +319,14 @@ def url_summary(chat) -> str | None:
         msg = chat
     else:
         msg = chat.message.msg
-    url_pattern = re.compile(r'https?://[^\s]+')
+
+    # ✅ URL 정규식 개선 (괄호, 따옴표 등 제외)
+    url_pattern = re.compile(r'https?://[^\s)>\]}\'\"“”]+')
     url_match = url_pattern.search(msg)
+
     if url_match:
-        url = url_match.group(0)
+        # ✅ 후처리: URL 끝에 붙은 특수문자 제거
+        url = url_match.group(0).rstrip(').,!?]}>\'\"“”')
         print("✅ 메시지에서 URL 발견:", url)
         resolved_url = resolve_redirect_url(url)
         print("🔹 실제 URL:", resolved_url)
