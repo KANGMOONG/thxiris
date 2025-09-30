@@ -177,8 +177,8 @@ def fetch_twitter_content(url: str) -> dict | None:
         resp = requests.get(api_url, headers=headers, timeout=5)
         if not resp.ok: return None
         data = resp.json()
-        tweet_data = data.get("data", {})
-        includes = data.get("includes", {})
+        tweet_data = data.get("data","")
+        includes = data.get("includes","")
         text = tweet_data.get("text","")
         created_at = tweet_data.get("created_at","")
         author = ""
@@ -201,10 +201,10 @@ def fetch_article_content(url: str) -> dict:
     if "blog.naver.com" in url and not url.startswith("https://m."):
         url = url.replace("https://blog.naver.com","https://m.blog.naver.com")
     article = try_requests_first(url)
-    if article and len(article.get("body",""))>100: return article
+    if article and article["body"] and len(article["body"]) > 100: return article
     if url != original_url:
         article = try_requests_first(original_url)
-        if article and len(article.get("body",""))>100: return article
+        if article and article["body"] and len(article["body"]) > 100: return article
     return fetch_with_selenium(original_url)
 
 # -------------------------------
@@ -214,21 +214,28 @@ def summarize_text(article: dict) -> str:
     title = article.get("title","")
     body = article.get("body","")
     if not body or len(body.strip())<50:
-        return "- 본문 추출 실패\n- 사이트 접근 제한 가능성\n- Selenium 재시도 필요\n- "
+        return "- 본문 추출 실패"
     prompt = f"""
 제목과 본문을 보고
 기사 내용을 핵심만 요약해줘.
+누가 뭘 어떻게 했는지, 장소와 주체, 대상 구체적으로 말해줘야
+내용의 혼동이 없음.
+기승전결이면 더 좋고, 정확하게 요약해줘.
+
 - 각 항목은 30자 이내, 음슴체
-- 출력은 '✅ 요약' 첫줄, 그 아래 총 6줄, 각 열 '-'로 시작
+- 출력은 '✅ 요약'을 제일 첫줄로 시작하고, 그 아래로 총 6줄로 각 열 시작마다 '-'를 붙여주고 자연스럽고 깔끔하게 요약
+- 각 열 끝에 공백 없게
+
 제목:
-\"\"\"{title}\"\"\"
+\"\"\"{title}\"\"\" 
+
 본문:
-\"\"\"{body}\"\"\"
+\"\"\"{body}\"\"\" 
 """
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role":"user","content":prompt}],
             max_completion_tokens=300
         )
         return response.choices[0].message.content.strip()
@@ -238,20 +245,30 @@ def summarize_text(article: dict) -> str:
 # -------------------------------
 # 메시지에서 URL 찾아 요약
 # -------------------------------
-def url_summary(msg: str) -> str | None:
-    # http, https, www., 도메인 기반 URL 인식 (TLD 필터)
-    url_pattern = re.compile(
-        r'(https?://[^\s)>\]}\'\"“”]+|(?:www\.)?[a-zA-Z0-9-]+\.(?:com|net|org|io|co|kr|jp|us|uk|info|biz|tv|me|xyz)(?:/[^\s)>\]}\'\"“”]*)?)'
-    )
+def url_summary(chat) -> str | None:
+    # ChatContext나 문자열 대응
+    if isinstance(chat,str):
+        msg = chat
+    else:
+        msg = getattr(chat,'message',None)
+        if msg:
+            msg = getattr(msg,'msg',None)
+        if not msg:
+            print("❌ 메시지 문자열 추출 실패")
+            return None
+
+    # URL 정규식 (http/https 없어도 TLD 기반 포함)
+    url_pattern = re.compile(r'(https?://[^\s)]+|[^\s]+\.[a-z]{2,6}[^\s)]*)', re.IGNORECASE)
     url_match = url_pattern.search(msg)
     if url_match:
-        url = url_match.group(0).rstrip(').,!?]}>\'\"“”')
-        if not url.startswith("http"):
-            url = "https://" + url
+        url = url_match.group(0).rstrip(').,!?')  # 괄호나 마침표 제거
         resolved_url = resolve_redirect_url(url)
-        article = fetch_article_content(resolved_url)
-        summary = summarize_text(article)
-        return summary
+        try:
+            article = fetch_article_content(resolved_url)
+            summary = summarize_text(article)
+            return summary
+        except:
+            return f"✅ 오류\n- URL 처리 실패\n- 수동 확인 필요\n- "
     return None
 
 # -------------------------------
