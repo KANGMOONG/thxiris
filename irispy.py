@@ -11,6 +11,7 @@ from bots.text2image import draw_text
 from bots.coin import get_coin_info
 from bots.test_img import get_img
 from bots.excel_test import excel
+from bots.stocktest import kospidaq
 
 
 from iris.decorators import *
@@ -29,6 +30,10 @@ def on_message(chat: ChatContext):
     #excel(chat)
     try:
         match chat.message.command:
+
+            case "!증시"
+                kospidaq("KOSPI")
+                kospidaq("KOSDAQ")
             
             case "!hhi":
                 chat.reply(f"Hello {chat.sender.name}")
