@@ -5,7 +5,7 @@ import json
 from iris.decorators import *
 from iris import ChatContext
 
-def kospidaq(val):
+def kospidaq(chat:ChatContext, val):
     try:
         chart_url = f"https://ssl.pstatic.net/imgfinance/chart/mobile/mini/{val}_naverpc_l.png"
         chart_response = requests.get(chart_url, stream=True)
