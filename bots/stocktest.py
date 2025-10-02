@@ -144,10 +144,6 @@ def kospidaq(val):
         draw.text((value_col3_x, info_y_start + line_height), volume_text, font=font_sub, fill=text_color)
 
 
-        # PC에 파일로 저장
-        with open("stock_chart.png", "wb") as f:
-            f.write(img_byte_arr.getvalue())
-        print("이미지 저장 완료! stock_chart.png 확인")
                 
         # 6. Return the image as bytes
         img_byte_arr = io.BytesIO()
