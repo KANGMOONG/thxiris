@@ -55,7 +55,11 @@ def kospidaq(chat:ChatContext, val):
         text_color = (0, 0, 0)
 
         # Stock Name and Code
-        title_text = stock_data['cd'] # 한글네임으로 변환해야함
+        if val =="KOSPI":
+            title_text = "코스피" # 한글네임으로 변환해야함
+        elif val =="KOSDAQ":
+            title_text = "코스닥"
+        
         code_text = stock_data['cd']
 
         title_x, title_y = 15, 15
