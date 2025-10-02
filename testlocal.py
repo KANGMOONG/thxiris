@@ -1,5 +1,6 @@
 #from bots.gpt_url_summary import url_summary
 from bots.gpt_url_summary_test import url_summary
+from bots.stocktest import kospidaq
 
 def main():
     print("🔁 반복 테스트 모드입니다. 'exit' 입력 시 종료됩니다.")
@@ -11,11 +12,12 @@ def main():
             break
 
         try:
-            testoutput = url_summary(testinput)
-            print(f"📄 출력 결과:\n{testoutput}")
+            kospidaq(testinput)
+            #print(f"📄 출력 결과:\n{testoutput}")
         except Exception as e:
             print(f"❌ 에러 발생: {e}")
 
 
 if __name__ == "__main__":
     main()
+

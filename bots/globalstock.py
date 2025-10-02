@@ -6,6 +6,9 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import os
 
+
+
+
 def save_tsla_candle_chart_3mo(filename="tsla_3mo_chart.png"):
     # 폰트 경로 (상위 폴더 res 내 GmarketSansMedium.otf)
     font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'res', 'GmarketSansMedium.otf'))

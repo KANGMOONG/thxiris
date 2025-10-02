@@ -2,61 +2,33 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 import io
 import json
-from iris.decorators import *
-from iris import ChatContext
 
 
-@has_param
-def create_stock_image(chat: ChatContext):
-    """
-    Generates a PNG image with stock information based on the given query.
-    """
+def kospidaq(val):
     try:
-        # 1. Fetch stock code
-        query = chat.message.msg[4:]
-        autocomplete_url = f"https://ac.stock.naver.com/ac?q={query}&target=stock%2Cipo%2Cindex%2Cmarketindicator"
-        autocomplete_response = requests.get(autocomplete_url)
-        autocomplete_response.raise_for_status()
-        autocomplete_json = autocomplete_response.json()
-
-        if not autocomplete_json['items'] or not autocomplete_json['items'][0]:
-            chat.reply("종목을 찾는데 실패했습니다.")
-            return None
-        
-        type_code = autocomplete_json['items'][0]['typeCode']
-        if not type_code in ["KOSPI","KOSDAQ"]:
-            chat.reply("현재는 국내 주식시장만 지원합니다.")
-            return None
-
-        stock_code = autocomplete_json['items'][0]["code"]
-        stock_name = autocomplete_json['items'][0]["name"]
-
-        # 2. Fetch stock chart image
-        chart_url = f"https://ssl.pstatic.net/imgfinance/chart/item/area/day/{stock_code}.png"
+        chart_url = f"https://ssl.pstatic.net/imgfinance/chart/mobile/mini/KOSPI_naverpc_l.png"
         chart_response = requests.get(chart_url, stream=True)
         chart_response.raise_for_status()
-
         chart_image = Image.open(io.BytesIO(chart_response.content)).convert("RGBA")
         #chart_image = create_candlestick_chart(test_json)
-        chart_width, chart_height = chart_image.size
+        chart_width, chart_height = chart_image.size   
 
-        # 3. Fetch real-time stock data
-        realtime_url = f"https://polling.finance.naver.com/api/realtime?query=SERVICE_RECENT_ITEM:{stock_code}"
+        realtime_url = f"https://polling.finance.naver.com/api/realtime?query=SERVICE_INDEX:KOSDAQ"
         realtime_response = requests.get(realtime_url)
         realtime_response.raise_for_status()
         realtime_json = realtime_response.json()
-
+       
         if realtime_json['resultCode'] != 'success' or not realtime_json['result']['areas'] or not realtime_json['result']['areas'][0]['datas']:
             return None
-
+       
         stock_data = realtime_json['result']['areas'][0]['datas'][0]
+        print(stock_data['cd'])
 
-        # 4. Create white area and paste chart
         new_height = 550
         new_image = Image.new("RGB", (chart_width, new_height), "white")
         new_image.paste(chart_image, (0, new_height - chart_height), chart_image)
-
-        # 5. Add stock information
+        
+        
         draw = ImageDraw.Draw(new_image)
         try:
             font_path = "res/GmarketSansMedium.otf"
@@ -73,12 +45,11 @@ def create_stock_image(chat: ChatContext):
             font_code = ImageFont.load_default()
             font_normal = ImageFont.load_default()
 
-
         text_color = (0, 0, 0)
 
         # Stock Name and Code
-        title_text = stock_name
-        code_text = stock_code
+        title_text = stock_data['cd']
+        code_text = stock_data['cd']
 
         title_x, title_y = 15, 15
         draw.text((title_x, title_y), title_text, font=font_title, fill=text_color)
@@ -93,8 +64,13 @@ def create_stock_image(chat: ChatContext):
 
 
         # Current Price and Change
-        current_price_text = f"{stock_data['nv']:,}"
-        change_text = f"{stock_data['cv']:,}"
+        # 100으로 나누기
+        current_price = stock_data['nv'] / 100
+        change_val = stock_data['cv'] / 100
+
+        # 문자열 포맷팅 (천 단위 구분)
+        current_price_text = f"{current_price:,.2f}"  # 소수점 2자리까지
+        change_text = f"{change_val:,.2f}"
         change_rate_text = f"{stock_data['cr']:.2f}%"
 
         price_x = 15
@@ -135,7 +111,7 @@ def create_stock_image(chat: ChatContext):
         draw.text((info_x_start_label, info_y_start + line_height), "시가", font=font_normal, fill=text_color)
         draw.text((info_x_start_label, info_y_start + 2 * line_height), "저가", font=font_normal, fill=text_color)
 
-        draw.text((info_x_start_value, info_y_start), f"{stock_data['pcv']:,}", font=font_normal, fill=text_color)
+        #draw.text((info_x_start_value, info_y_start), f"{stock_data['pcv']:,}", font=font_normal, fill=text_color)
         draw.text((info_x_start_value, info_y_start + line_height), f"{stock_data['ov']:,}", font=font_normal, fill=text_color)
         draw.text((info_x_start_value, info_y_start + 2 * line_height), f"{stock_data['lv']:,}", font=font_normal, fill=text_color)
 
@@ -158,13 +134,15 @@ def create_stock_image(chat: ChatContext):
         draw.text((value_col2_x, info_y_start + line_height), volume_text, font=font_normal, fill=text_color)
         draw.text((value_col2_x, info_y_start + 2 * line_height), transaction_amount_text, font=font_normal, fill=text_color)
 
-
-        # 6. Return the image as bytes
+        # 6. 이미지 저장
         img_byte_arr = io.BytesIO()
         new_image.save(img_byte_arr, format='PNG')
-        img_byte_arr = io.BytesIO(img_byte_arr.getvalue())
 
-        return chat.reply_media([img_byte_arr])
+        # PC에 파일로 저장
+        with open("stock_chart.png", "wb") as f:
+            f.write(img_byte_arr.getvalue())
+        print("이미지 저장 완료! stock_chart.png 확인")
+
 
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
