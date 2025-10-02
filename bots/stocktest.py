@@ -145,6 +145,8 @@ def kospidaq(val):
 
 
         # PC에 파일로 저장
+        img_byte_arr = io.BytesIO()
+        new_image.save(img_byte_arr, format='PNG')
         with open("stock_chart.png", "wb") as f:
             f.write(img_byte_arr.getvalue())
         print("이미지 저장 완료! stock_chart.png 확인")
