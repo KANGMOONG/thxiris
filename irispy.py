@@ -33,7 +33,7 @@ def on_message(chat: ChatContext):
 
             case "!증시":
                 kospidaq(chat,"KOSPI")
-                #kospidaq("KOSDAQ")
+                kospidaq(chat,"KOSDAQ")
             
             case "!hhi":
                 chat.reply(f"Hello {chat.sender.name}")
