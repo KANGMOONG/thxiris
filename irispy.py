@@ -31,7 +31,7 @@ def on_message(chat: ChatContext):
     try:
         match chat.message.command:
 
-            case "!증시"
+            case "!증시":
                 kospidaq("KOSPI")
                 kospidaq("KOSDAQ")
             
