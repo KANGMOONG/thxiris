@@ -33,6 +33,7 @@ def on_message(chat: ChatContext):
 
             case "!증시":
                 kospidaq(chat,"KOSPI")
+                time.sleep(0.5)
                 kospidaq(chat,"KOSDAQ")
             
             case "!hhi":
