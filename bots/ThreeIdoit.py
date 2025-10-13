@@ -49,7 +49,8 @@ def get_upbit(chat: ChatContext):
         result += f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
     except:
         pass        
-    chat.reply(result)
+    #chat.reply(result)
+    return result
 
 def get_my_coins(chat: ChatContext):
     kv = PyKV()
@@ -172,5 +173,11 @@ def get_USDKRW():
 
 def Threeidiots(chat: ChatContext):
     chat.message.msg='WLD'
-    print(chat.message.msg)
     result1=get_upbit(chat)
+    chat.message.msg='ONDO'
+    result2=get_upbit(chat)
+    chat.message.msg='VIRTUAL'
+    result3=get_upbit(chat)
+    print(result1)
+    print(result2)
+    print(result3)
