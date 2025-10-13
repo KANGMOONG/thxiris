@@ -20,7 +20,7 @@ def get_coin_info(chat: ChatContext):
 
 def get_upbit(chat: ChatContext):
     kv = PyKV()
-    query = chat.message.param.upper()
+    query = chat.message.msg
     res = requests.get(base_url + 'KRW-' + query)
     if 'error' in res.text:
         try:
@@ -171,6 +171,6 @@ def get_USDKRW():
 
 
 def Threeidiots(chat: ChatContext):
-    chat.message.msg='!코인 월드'
+    chat.message.msg='WLD'
     print(chat.message.msg)
     result1=get_upbit(chat)
