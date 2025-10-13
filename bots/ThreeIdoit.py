@@ -37,7 +37,7 @@ def get_upbit(chat: ChatContext):
     if price % 1 == 0:
         price = int(price)
     
-    result = query + f' {price:,}원  {change:,.2f}%'
+    result = query + f'     {price:,}원  {change:,.2f}%'
     try:
         user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
         amount = user_coin_info["amount"]
@@ -52,46 +52,73 @@ def get_upbit(chat: ChatContext):
     #chat.reply(result)
     return result
 
-def get_my_coins(chat: ChatContext):
+def get_upbit2(chat: ChatContext):
     kv = PyKV()
-    my_coins = kv.get(f"coin.{str(chat.sender.id)}")
-    if not my_coins:
-        chat.reply("등록된 코인이 없습니다. !코인등록 기능으로 코인을 등록하세요.")
-        return None
+    query = chat.message.msg
+    res = requests.get(base_url + 'KRW-' + query)
+    if 'error' in res.text:
+        try:
+            result_json, query = get_upbit_korean(query)
+        except:
+            chat.reply("검색된 코인이 없습니다.")
+            return None
 
-    my_coins_list = []
-    for key in my_coins.keys():
-        my_coins_list.append("KRW-" + key)
+    else:
+        result_json = res.json()[0]
     
-    coins_query = ",".join(my_coins_list)
+    price = result_json['trade_price']
+    change = result_json['signed_change_rate']*100
+    if price % 1 == 0:
+        price = int(price)
     
-    res = requests.get(base_url + coins_query)
-    
-    result_list = []
-    coins = {}
-    current_total = 0
-    bought_total = 0
-    
-    for coin in res.json():
-        coins[coin['market'][4:]] = {'price' : coin['trade_price'], 'change' : coin['signed_change_rate']*100}
-    
-    for key in coins.keys():
-        to_append = f'{key}\n현재가 : {coins[key]["price"]} 원\n등락률 : {coins[key]["change"]:.2f} %'
-        amount = my_coins[key]["amount"]
-        average = my_coins[key]["average"]
+    result = query + f'   {price:,}원  {change:,.2f}%'
+    try:
+        user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
+        amount = user_coin_info["amount"]
+        average = user_coin_info["average"]
         seed = average*amount
-        total = round(coins[key]["price"]*amount,0)
+        total = round(result_json['trade_price']*amount,0)
         percent = round((total/seed-1)*100,1)
         plus_mark = "+" if percent > 0 else ""
-        to_append = to_append + f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
-        result_list.append(to_append)
-        current_total += total
-        bought_total += seed
-    result = '\n\n'.join(result_list)
-    total_change = round((current_total/bought_total-1)*100,1)
-    result = '내 코인\n' + '\u200b'*500 + f'\n전체\n총평가 : {current_total:,.0f}원\n총매수 : {bought_total:,.0f}원\n평가손익 : {current_total-bought_total:+,.0f}원\n수익률 : {total_change:+,.1f}%\n\n' + result
+        result += f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
+    except:
+        pass        
+    #chat.reply(result)
+    return result
+
+def get_upbit3(chat: ChatContext):
+    kv = PyKV()
+    query = chat.message.msg
+    res = requests.get(base_url + 'KRW-' + query)
+    if 'error' in res.text:
+        try:
+            result_json, query = get_upbit_korean(query)
+        except:
+            chat.reply("검색된 코인이 없습니다.")
+            return None
+
+    else:
+        result_json = res.json()[0]
     
-    chat.reply(result)
+    price = result_json['trade_price']
+    change = result_json['signed_change_rate']*100
+    if price % 1 == 0:
+        price = int(price)
+    
+    result = query + f' {price:,}원  {change:,.2f}%'
+    try:
+        user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
+        amount = user_coin_info["amount"]
+        average = user_coin_info["average"]
+        seed = average*amount
+        total = round(result_json['trade_price']*amount,0)
+        percent = round((total/seed-1)*100,1)
+        plus_mark = "+" if percent > 0 else ""
+        result += f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
+    except:
+        pass        
+    #chat.reply(result)
+    return result
     
 def get_upbit_all(chat: ChatContext):
     res = requests.get(all_url)
@@ -161,23 +188,13 @@ def get_binance(chat: ChatContext):
 
 
 
-def usd_to_krw(chat: ChatContext):
-    usd = float(chat.message.param)
-    USDKRW = get_USDKRW()
-    chat.reply(f'${usd:,.2f} = {USDKRW*float(chat.message.msg[4:]):,.2f}원\n환율 : {USDKRW:,.2f}원')
-
-def get_USDKRW():
-    USDKRW = float(requests.get(currency_url).json()["country"][1]["value"].replace(",",""))
-    return USDKRW
-
-
 def Threeidiots(chat: ChatContext):
     chat.message.msg='WLD'
     result1=get_upbit(chat)
     chat.message.msg='ONDO'
-    result2=get_upbit(chat)
+    result2=get_upbit2(chat)
     chat.message.msg='VIRTUAL'
-    result3=get_upbit(chat)
+    result3=get_upbit3(chat)
     print(result1+'\n')
     print(result2)
     print(result3)
