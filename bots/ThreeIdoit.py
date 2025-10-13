@@ -226,7 +226,6 @@ def coin_remove(chat: ChatContext):
 
 
 def Threeidiots(chat: ChatContext):
-    chat.message.msg="!주식 월드코인"
     result1=get_upbit(chat)
     result2=get_upbit(chat)
     result3=get_upbit(chat)
