@@ -37,7 +37,7 @@ def get_upbit(chat: ChatContext):
     if price % 1 == 0:
         price = int(price)
     
-    result = query + f'\n현재가 : {price:,}원  등락률 : {change:,.2f}%'
+    result = query + f'\n{price:,}원  {change:,.2f}%\n'
     try:
         user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
         amount = user_coin_info["amount"]
@@ -181,4 +181,4 @@ def Threeidiots(chat: ChatContext):
     print(result1+'\n')
     print(result2)
     print(result3)
-    chat.reply(result1+result2)
+    chat.reply(result1+result2+result3)
