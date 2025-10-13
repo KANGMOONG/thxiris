@@ -172,4 +172,5 @@ def get_USDKRW():
 
 def Threeidiots(chat: ChatContext):
     chat.message.msg='!코인 월드'
+    print(chat.message.msg)
     result1=get_upbit(chat)
