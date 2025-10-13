@@ -6,6 +6,8 @@ from iris.decorators import *
 from iris import ChatContext
 
 def kospidaq(chat:ChatContext, val):
+    #https://ssl.pstatic.net/imgfinance/chart/world/continent/NAS@IXIC.png?1760096155743
+    
     try:
         chart_url = f"https://ssl.pstatic.net/imgfinance/chart/mobile/mini/{val}_naverpc_l.png"
         chart_response = requests.get(chart_url, stream=True)
@@ -59,6 +61,7 @@ def kospidaq(chat:ChatContext, val):
             title_text = "코스피" # 한글네임으로 변환해야함
         elif val =="KOSDAQ":
             title_text = "코스닥"
+        
         
         code_text = stock_data['cd']
 

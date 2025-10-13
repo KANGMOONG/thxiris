@@ -12,7 +12,7 @@ from bots.coin import get_coin_info
 from bots.test_img import get_img
 from bots.excel_test import excel
 from bots.stocktest import kospidaq
-
+from bots.ThreeIdoit import Threeidiots
 
 from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
@@ -30,6 +30,8 @@ def on_message(chat: ChatContext):
     #excel(chat)
     try:
         match chat.message.command:
+            case "!병림픽":
+                Threeidiots(chat)
 
             case "!증시":
                 kospidaq(chat,"KOSPI")
