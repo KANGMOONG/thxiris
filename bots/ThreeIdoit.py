@@ -226,14 +226,10 @@ def coin_remove(chat: ChatContext):
 
 
 def Threeidiots(chat: ChatContext):
-    data = SimpleNamespace(
-      월드코인="!코인 월드코인",
-      온도파이낸스="!코인 온도파이낸스",
-      버추얼프로토콜="!코인 버추얼프로토콜"
-    )
-    result1=get_upbit(data.월드코인)
-    result2=get_upbit(data.온도파이낸스)
-    result3=get_upbit(data.버추얼프로토콜)
+    chat.message.msg="!주식 월드코인"
+    result1=get_upbit(chat)
+    result2=get_upbit(chat)
+    result3=get_upbit(chat)
     chat.reply(result1)
     chat.reply(result2)
     chat.reply(result3)
