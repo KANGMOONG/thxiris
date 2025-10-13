@@ -178,7 +178,7 @@ def Threeidiots(chat: ChatContext):
     result2=get_upbit(chat)
     chat.message.msg='VIRTUAL'
     result3=get_upbit(chat)
-    print(result1)
+    print(result1+'\n')
     print(result2)
     print(result3)
     chat.reply(result1)
