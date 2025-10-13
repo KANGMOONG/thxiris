@@ -1,6 +1,7 @@
 import requests
 import datetime
 import pytz
+from types import SimpleNamespace
 from iris import ChatContext, PyKV
 
 all_url = "https://api.upbit.com/v1/market/all"
@@ -225,7 +226,7 @@ def coin_remove(chat: ChatContext):
 
 
 def Threeidiots(chat: ChatContext):
-    data = simpleNamespace(
+    data = SimpleNamespace(
       월드코인="!코인 월드코인",
       온도파이낸스="!코인 온도파이낸스",
       버추얼프로토콜="!코인 버추얼프로토콜"
