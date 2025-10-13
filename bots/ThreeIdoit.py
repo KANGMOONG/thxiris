@@ -37,7 +37,7 @@ def get_upbit(chat: ChatContext):
     if price % 1 == 0:
         price = int(price)
     
-    result = query + f'\n{price:,}원  {change:,.2f}%\n'
+    result = query + f'{price:,}원  {change:,.2f}%\n'
     try:
         user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
         amount = user_coin_info["amount"]
