@@ -181,4 +181,4 @@ def Threeidiots(chat: ChatContext):
     print(result1+'\n')
     print(result2)
     print(result3)
-    chat.reply(result1)
+    chat.reply(result1+result2)
