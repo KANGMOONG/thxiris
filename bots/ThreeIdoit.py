@@ -158,19 +158,7 @@ def get_binance(chat: ChatContext):
         print(e)
         chat.reply('코인이 정확하지 않거나 오류가 발생하였습니다. 코인심볼과 화폐단위를 함께 적어주세요. 예시 : BTC/USDT, ETC/USDT, IQ/BNB')
 
-def get_kimchi_premium(chat: ChatContext):
-    BTCUSDT = float(requests.get(binance_url+"price?symbol=BTCUSDT").json()["price"])
-    BTCKRW = requests.get(base_url + "KRW-BTC").json()[0]["trade_price"]
-    USDKRW = get_USDKRW()
-    local_time = datetime.datetime.now()
-    eastern = pytz.timezone('US/Eastern')
-    eastern_time = local_time.astimezone(eastern)
-    EST = eastern_time.strftime("%d일 %H시%M분")
-    BTCUSDT_to_KRW = BTCUSDT*USDKRW
-    BTCKRW_to_USDT = BTCKRW/USDKRW
-    kimchi_premium = (BTCKRW - BTCUSDT_to_KRW) / BTCUSDT_to_KRW * 100
 
-    chat.reply(f'김치 프리미엄\n업빗 : ￦{BTCKRW:,.0f}(${BTCKRW_to_USDT:,.0f})\n바낸 : ￦{BTCUSDT_to_KRW:,.0f}(${BTCUSDT:,.0f})\n김프 : {kimchi_premium:.2f}%\n환율 : ￦{USDKRW:,.0f}\n버거시간(동부) : {EST}')
 
 def usd_to_krw(chat: ChatContext):
     usd = float(chat.message.param)
@@ -181,54 +169,6 @@ def get_USDKRW():
     USDKRW = float(requests.get(currency_url).json()["country"][1]["value"].replace(",",""))
     return USDKRW
 
-def coin_add(chat: ChatContext):
-    msg_split = chat.message.msg.split(" ")
-    if not len(msg_split) == 4:
-        chat.reply('"!코인등록 코인명(영문심볼) 보유수량 평균단가"로 입력하세요.')
-        return None
-    symbol = msg_split[1].upper()
-    amount = float(msg_split[2].replace(',',''))
-    average = float(msg_split[3].replace(',',''))
-    r = requests.get(base_url + 'KRW-' + symbol)
-    if 'error' in r.text:
-        chat.reply('업비트 원화마켓만 지원합니다.\n"!코인등록 코인명(영문심볼) 보유수량 평균단가"로 입력하세요.')
-        return None
-
-    kv = PyKV()
-    user_kv = kv.get(f"coin.{str(chat.sender.id)}")
-    if not user_kv:
-        user_kv = {}
-    
-    user_kv[symbol] = {"amount":amount, "average":average}
-    kv.put(f"coin.{str(chat.sender.id)}",user_kv)
-
-    chat.reply(f'{symbol}코인을 {average}원에 {amount}개 등록하였습니다.')
-
-def coin_remove(chat: ChatContext):
-    kv = PyKV()
-    msg_split = chat.message.msg.split(" ")
-    if not len(msg_split) == 2:
-        chat.reply('"!코인삭제 코인명(영문심볼)"으로 입력하세요.')
-        return None
-    
-    symbol = msg_split[1].upper()
-    
-    user_kv = kv.get(f"coin.{str(chat.sender.id)}")
-    if not user_kv:
-        user_kv = {}
-    
-    if symbol in user_kv.keys():
-        user_kv.pop(symbol)
-        kv.put(f"coin.{str(chat.sender.id)}", user_kv)
-        chat.reply(f'{symbol}코인을 삭제하였습니다.')
-    else:
-        chat.reply('코인이 없거나 잘못된 명령입니다.\n"!코인삭제 코인명(영문심볼)"으로 입력하세요.')
-
 
 def Threeidiots(chat: ChatContext):
     result1=get_upbit(chat)
-    result2=get_upbit(chat)
-    result3=get_upbit(chat)
-    chat.reply(result1)
-    chat.reply(result2)
-    chat.reply(result3)
