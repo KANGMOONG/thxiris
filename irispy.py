@@ -79,11 +79,11 @@ def on_message(chat: ChatContext):
             case "!텍스트" | "!사진" | "!껄무새" | "!멈춰" | "!지워" | "!진행" | "!말대꾸" | "!텍스트추가":
                 draw_text(chat)
             
-            case "!코인" | "!내코인" | "!바낸" | "!김프" | "!달러" | "!코인등록" | "!코인삭제" | "!즐찾등록" | "!즐찾삭제":
+            case "!코인" | "!내코인" | "!바낸" | "!김프" | "!달러" | "!코인등록" | "!코인삭제":
                 get_coin_info(chat)
 
-            #case "!즐찾등록" | "!즐찾삭제":
-             #   favorite_coin_info(chat)
+            case "!즐찾등록" | "!즐찾삭제":
+                favorite_coin_info(chat)
 
             case "!1":
                 get_img(chat)
