@@ -19,8 +19,6 @@ def favorite_coin_info(chat: ChatContext):
             get_my_coins(chat)
         case "!바낸":
             get_binance(chat)
-        case "!김프":
-            get_kimchi_premium(chat)
         case "!달러":
             usd_to_krw(chat)
         case "!즐찾등록":
@@ -48,17 +46,7 @@ def get_upbit(chat: ChatContext):
         price = int(price)
     
     result = query + f'\n현재가 : {price:,}원\n등락률 : {change:,.2f}%'
-    try:
-        user_coin_info = kv.get(f"coin.{str(chat.sender.id)}")[query]
-        amount = user_coin_info["amount"]
-        average = user_coin_info["average"]
-        seed = average*amount
-        total = round(result_json['trade_price']*amount,0)
-        percent = round((total/seed-1)*100,1)
-        plus_mark = "+" if percent > 0 else ""
-        result += f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
-    except:
-        pass        
+ 
     chat.reply(result)
 
 def get_my_coins(chat: ChatContext):
@@ -107,7 +95,7 @@ def get_upbit_all(chat: ChatContext):
     coin_list = sorted(coins.items(),key = lambda x: x[1]['change'],reverse=True)
     
     for item in coin_list:
-        to_append = f'{item[0]}\n현재가 : {item[1]["price"]} 원\n등락률 : {item[1]["change"]:.2f} %'
+        to_append = f'{item[0]}\n현재가 : {int(item[1]["price"])} 원\n등락률 : {item[1]["change"]:.2f} %'
         result_list.append(to_append)
     result = '\n\n'.join(result_list)
     
@@ -154,20 +142,6 @@ def get_binance(chat: ChatContext):
     except Exception as e:
         print(e)
         chat.reply('코인이 정확하지 않거나 오류가 발생하였습니다. 코인심볼과 화폐단위를 함께 적어주세요. 예시 : BTC/USDT, ETC/USDT, IQ/BNB')
-
-def get_kimchi_premium(chat: ChatContext):
-    BTCUSDT = float(requests.get(binance_url+"price?symbol=BTCUSDT").json()["price"])
-    BTCKRW = requests.get(base_url + "KRW-BTC").json()[0]["trade_price"]
-    USDKRW = get_USDKRW()
-    local_time = datetime.datetime.now()
-    eastern = pytz.timezone('US/Eastern')
-    eastern_time = local_time.astimezone(eastern)
-    EST = eastern_time.strftime("%d일 %H시%M분")
-    BTCUSDT_to_KRW = BTCUSDT*USDKRW
-    BTCKRW_to_USDT = BTCKRW/USDKRW
-    kimchi_premium = (BTCKRW - BTCUSDT_to_KRW) / BTCUSDT_to_KRW * 100
-
-    chat.reply(f'김치 프리미엄\n업빗 : ￦{BTCKRW:,.0f}(${BTCKRW_to_USDT:,.0f})\n바낸 : ￦{BTCUSDT_to_KRW:,.0f}(${BTCUSDT:,.0f})\n김프 : {kimchi_premium:.2f}%\n환율 : ￦{USDKRW:,.0f}\n버거시간(동부) : {EST}')
 
 def usd_to_krw(chat: ChatContext):
     usd = float(chat.message.param)
