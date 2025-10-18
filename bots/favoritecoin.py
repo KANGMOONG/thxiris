@@ -15,7 +15,7 @@ def favorite_coin_info(chat: ChatContext):
                 get_upbit(chat)
             else:
                 get_upbit_all(chat)
-        case "!내코인":
+        case "!즐찾":
             get_my_coins(chat)
         case "!바낸":
             get_binance(chat)
@@ -78,28 +78,15 @@ def get_my_coins(chat: ChatContext):
     
     result_list = []
     coins = {}
-    current_total = 0
-    bought_total = 0
     
     for coin in res.json():
         coins[coin['market'][4:]] = {'price' : coin['trade_price'], 'change' : coin['signed_change_rate']*100}
     
     for key in coins.keys():
         to_append = f'{key}\n현재가 : {coins[key]["price"]} 원\n등락률 : {coins[key]["change"]:.2f} %'
-        amount = my_coins[key]["amount"]
-        average = my_coins[key]["average"]
-        seed = average*amount
-        total = round(coins[key]["price"]*amount,0)
-        percent = round((total/seed-1)*100,1)
-        plus_mark = "+" if percent > 0 else ""
-        to_append = to_append + f'\n총평가금액 : {total:,.0f}원({plus_mark}{percent:,.1f}%)\n총매수금액 : {seed:,.0f}원\n보유수량 : {amount:,.0f}개\n평균단가 : {average:,}원'
         result_list.append(to_append)
-        current_total += total
-        bought_total += seed
     result = '\n\n'.join(result_list)
-    total_change = round((current_total/bought_total-1)*100,1)
-    result = '내 코인\n' + '\u200b'*500 + f'\n전체\n총평가 : {current_total:,.0f}원\n총매수 : {bought_total:,.0f}원\n평가손익 : {current_total-bought_total:+,.0f}원\n수익률 : {total_change:+,.1f}%\n\n' + result
-    
+   
     chat.reply(result)
     
 def get_upbit_all(chat: ChatContext):
