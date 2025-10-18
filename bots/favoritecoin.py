@@ -85,7 +85,7 @@ def get_my_coins(chat: ChatContext):
     for key in coins.keys():
         to_append = f'{key} {coins[key]["price"]}원 {coins[key]["change"]:.2f}%'
         result_list.append(to_append)
-    result = '\n\n'.join(result_list)
+    result = '\n'.join(result_list)
    
     chat.reply(result)
     
