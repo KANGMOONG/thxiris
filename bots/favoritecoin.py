@@ -15,7 +15,7 @@ def favorite_coin_info(chat: ChatContext):
                 get_upbit(chat)
             else:
                 get_upbit_all(chat)
-        case "!즐찾":
+        case "!즐":
             get_my_coins(chat)
         case "!바낸":
             get_binance(chat)
