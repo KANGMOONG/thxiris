@@ -65,7 +65,7 @@ def get_my_coins(chat: ChatContext):
     kv = PyKV()
     my_coins = kv.get(f"coin.{str(chat.sender.id)}")
     if not my_coins:
-        chat.reply("등록된 코인이 없습니다. !코인등록 기능으로 코인을 등록하세요.")
+        chat.reply("등록된 코인이 없습니다. !즐찾등록 기능으로 코인을 등록하세요.")
         return None
 
     my_coins_list = []
@@ -83,7 +83,7 @@ def get_my_coins(chat: ChatContext):
         coins[coin['market'][4:]] = {'price' : coin['trade_price'], 'change' : coin['signed_change_rate']*100}
     
     for key in coins.keys():
-        to_append = f'{key}\n현재가 : {coins[key]["price"]} 원\n등락률 : {coins[key]["change"]:.2f} %'
+        to_append = f'{key} {coins[key]["price"]} 원 {coins[key]["change"]:.2f} %'
         result_list.append(to_append)
     result = '\n\n'.join(result_list)
    
@@ -181,7 +181,7 @@ def get_USDKRW():
 def favorite_add(chat: ChatContext):
     msg_split = chat.message.msg.split(" ")
     if not len(msg_split) == 2:
-        chat.reply('"!코인등록 코인명(영문심볼)" 형태로 입력하세요.')
+        chat.reply('"!즐찾등록 코인명(영문심볼)" 형태로 입력하세요.')
         return None
 
     symbol = msg_split[1].upper()
@@ -189,7 +189,7 @@ def favorite_add(chat: ChatContext):
     # 업비트 원화 마켓에 존재하는지 확인
     r = requests.get(base_url + 'KRW-' + symbol)
     if 'error' in r.text:
-        chat.reply('업비트 원화마켓만 지원합니다.\n"!코인등록 코인명(영문심볼)"로 입력하세요.')
+        chat.reply('업비트 원화마켓만 지원합니다.\n"!즐찾등록 코인명(영문심볼)"로 입력하세요.')
         return None
 
     # 사용자별 코인 목록 가져오기
@@ -226,4 +226,4 @@ def favorite_remove(chat: ChatContext):
         kv.put(f"coin.{str(chat.sender.id)}", user_kv)
         chat.reply(f'{symbol}코인을 삭제하였습니다.')
     else:
-        chat.reply('코인이 없거나 잘못된 명령입니다.\n"!코인삭제 코인명(영문심볼)"으로 입력하세요.')
+        chat.reply('코인이 없거나 잘못된 명령입니다.\n"!즐찾삭제 코인명(영문심볼)"으로 입력하세요.')
