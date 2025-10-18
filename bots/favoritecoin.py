@@ -71,7 +71,7 @@ def get_my_coins(chat: ChatContext):
         coins[coin['market'][4:]] = {'price' : coin['trade_price'], 'change' : coin['signed_change_rate']*100}
     
     for key in coins.keys():
-        to_append = f'{key} {int(coins[key]["price"])}원 {coins[key]["change"]:.2f}%'
+        to_append = f'{key} {int(coins[key]["price:,"])}원 {coins[key]["change"]:.2f}%'
         result_list.append(to_append)
     result = '\n'.join(result_list)
    
