@@ -207,4 +207,4 @@ def wldadel(chat: ChatContext):
     print(result1+'\n')
     print(result2)
     print(result3)
-    chat.reply('*개노답3형제\n'+'📈 빗썸 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
+    chat.reply('*개노답3형제\n'+'📈 빗썸 기준\n'+'\n'+result1+'\n'+result2+'\n'+result3)
