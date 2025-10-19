@@ -17,8 +17,10 @@ def get_coin_info(chat: ChatContext):
             else:
                 Threeidiots(chat)
         case "!개":
-            wldadel(chat)
-            
+            if chat.message.has_param:
+                wldadel(chat)
+            else:
+                wldadel(chat)
     
 
 
