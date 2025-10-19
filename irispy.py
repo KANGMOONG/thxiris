@@ -13,6 +13,7 @@ from bots.test_img import get_img
 from bots.excel_test import excel
 from bots.stocktest import kospidaq
 from bots.ThreeIdoit import Threeidiots
+from bots.ThreeIdoit import wldadel
 from bots.favoritecoin import favorite_coin_info
 
 from iris.decorators import *
@@ -31,8 +32,11 @@ def on_message(chat: ChatContext):
     #excel(chat)
     try:
         match chat.message.command:
-            case "!병림픽":
+            case "!병림픽" | "!개" :
                 Threeidiots(chat)
+            
+            case "!개" :
+                wldadel(chat)
 
             case "!증시":
                 kospidaq(chat,"KOSPI")

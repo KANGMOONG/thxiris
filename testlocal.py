@@ -1,24 +1,33 @@
-#from bots.gpt_url_summary import url_summary
-from bots.gpt_url_summary_test import url_summary
-from bots.stocktest import kospidaq
-from bots.favoritecoin import favorite_coin_info
+import requests
 
-def main():
-    print("🔁 반복 테스트 모드입니다. 'exit' 입력 시 종료됩니다.")
-    while True:
-        #testinput = input("\n✅ 테스트 인풋을 입력하세요: ")
-        """
-        if testinput.lower() in ["exit", "quit"]:
-            print("👋 테스트를 종료합니다.")
-            break
-        """
 
-            favorite_coin_info(testinput)
-            #print(f"📄 출력 결과:\n{testoutput}")
-        except Exception as e:
-            print(f"❌ 에러 발생: {e}")
+def get_bithumb(val):
+    val=val.upper()
+    val="KRW-"+val
+
+    all_url = "https://api.bithumb.com/v1/market/all?isDetails=false"
+    price_url = f"https://api.bithumb.com/v1/ticker?markets={val}"
+    headers = {"accept": "application/json"}
+
+    code_response = requests.get(all_url, headers=headers)
+    code_data = code_response.json()
+
+    price_response = requests.get(price_url, headers=headers)
+    price_data = price_response.json()
+
+    
+    korean_name = next((c["korean_name"] for c in code_data if c["market"] == val), None)
+    
+
+    text = f"{korean_name} {price_data[0]['trade_price']:,}원 {price_data[0]['change_rate']*100:.2f}%"
+
+
+    print(text) 
+    
 
 
 if __name__ == "__main__":
-    main()
+    get_bithumb("agi")
+    get_bithumb("wld")
+    get_bithumb("arkm")
 

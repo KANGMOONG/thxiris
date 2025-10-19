@@ -16,7 +16,34 @@ def get_coin_info(chat: ChatContext):
                 Threeidiots(chat)
             else:
                 Threeidiots(chat)
+        case "!개":
+            wldadel(chat)
+            
+    
 
+
+def get_bithumb(val):
+    val=val.upper()
+    val="KRW-"+val
+
+    all_url = "https://api.bithumb.com/v1/market/all?isDetails=false"
+    price_url = f"https://api.bithumb.com/v1/ticker?markets={val}"
+    headers = {"accept": "application/json"}
+
+    code_response = requests.get(all_url, headers=headers)
+    code_data = code_response.json()
+
+    price_response = requests.get(price_url, headers=headers)
+    price_data = price_response.json()
+
+    
+    korean_name = next((c["korean_name"] for c in code_data if c["market"] == val), None)
+    
+
+    text = f"{korean_name} {price_data[0]['trade_price']:,}원 {price_data[0]['change_rate']*100:.2f}%"
+
+
+    print(text) 
 
 def get_upbit(chat: ChatContext):
     kv = PyKV()
@@ -169,3 +196,15 @@ def Threeidiots(chat: ChatContext):
     print(result2)
     print(result3)
     chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
+
+def wldadel(chat: ChatContext):
+    val="wld"
+    result1=get_bithumb(val)
+    val='arkm'
+    result2=get_bithumb(val)
+    val='agi'
+    result3=get_bithumb(val)
+    print(result1+'\n')
+    print(result2)
+    print(result3)
+    chat.reply('📈 빗썸 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
