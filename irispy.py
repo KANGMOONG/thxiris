@@ -32,7 +32,7 @@ def on_message(chat: ChatContext):
     #excel(chat)
     try:
         match chat.message.command:
-            case "!병림픽" | "!개" :
+            case "!병림픽" :
                 Threeidiots(chat)
             
             case "!개" :
