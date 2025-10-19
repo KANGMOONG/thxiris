@@ -43,9 +43,7 @@ def get_bithumb(val):
     
 
     text = f"{korean_name} {price_data[0]['trade_price']:,}원 {price_data[0]['change_rate']*100:.2f}%"
-
-
-    print(text) 
+    return text
 
 def get_upbit(chat: ChatContext):
     kv = PyKV()
