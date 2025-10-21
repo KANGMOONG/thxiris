@@ -184,8 +184,8 @@ def create_gold_image(chat: ChatContext):
     """
     try:
         # 1. Fetch stock code
-        query = chat.message.msg[4:]
-        autocomplete_url = f"https://ac.stock.naver.com/ac?q=KODEX%20%EA%B3%A8%EB%93%9C%EC%84%A0%EB%AC%BC(H)&target=stock%2Cipo%2Cindex%2Cmarketindicator"
+        query = "KODEX 골드선물(H)"
+        autocomplete_url =f"https://ac.stock.naver.com/ac?q={query}&target=stock%2Cipo%2Cindex%2Cmarketindicator"
         autocomplete_response = requests.get(autocomplete_url)
         autocomplete_response.raise_for_status()
         autocomplete_json = autocomplete_response.json()
