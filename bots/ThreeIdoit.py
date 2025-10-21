@@ -42,7 +42,7 @@ def get_bithumb(val):
     korean_name = next((c["korean_name"] for c in code_data if c["market"] == val), None)
     
 
-    text = f"{korean_name} {price_data[0]['trade_price']:,}원 {price_data[0]['change_rate']*100:.2f}%"
+    text = f"{korean_name} {price_data[0]['trade_price']:,}원 {price_data[0]['signed_change_rate']*100:.2f}%"
     return text
 
 def get_upbit(chat: ChatContext):
