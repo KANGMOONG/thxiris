@@ -177,7 +177,6 @@ def create_stock_image(chat: ChatContext):
         return None
     
 
-@has_param
 def create_gold_image(chat: ChatContext):
     """
     Generates a PNG image with stock information based on the given query.
@@ -189,6 +188,8 @@ def create_gold_image(chat: ChatContext):
         autocomplete_response = requests.get(autocomplete_url)
         autocomplete_response.raise_for_status()
         autocomplete_json = autocomplete_response.json()
+
+        print(query)
 
         if not autocomplete_json['items'] or not autocomplete_json['items'][0]:
             chat.reply("종목을 찾는데 실패했습니다.")
