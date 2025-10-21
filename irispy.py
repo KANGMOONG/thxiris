@@ -15,6 +15,7 @@ from bots.stocktest import kospidaq
 from bots.ThreeIdoit import Threeidiots
 from bots.ThreeIdoit import wldadel
 from bots.favoritecoin import favorite_coin_info
+from bots.stock import create_gold_image
 
 from iris.decorators import *
 from helper.BanControl import ban_user, unban_user
@@ -70,6 +71,9 @@ def on_message(chat: ChatContext):
 
             case "!주식":
                 create_stock_image(chat)
+
+            case "!금" :
+                create_gold_image(chat)
 
             case "!ig":
                 get_imagen(chat)
