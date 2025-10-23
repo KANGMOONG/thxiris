@@ -194,9 +194,9 @@ def Threeidiots(chat: ChatContext):
     result3,price3=get_upbit3(chat)
 
 
-    print(result1+ price1)
-    print(result2 + price2)
-    print(result3 + price3)
+    print(result1+ str(price1))
+    print(result2 + str(price2))
+    print(result3 + str(price3))
     #chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
 
 def wldadel(chat: ChatContext):
