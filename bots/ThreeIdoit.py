@@ -201,11 +201,11 @@ def Threeidiots(chat: ChatContext):
     result_text = ""
 
     for medal, (price, result) in zip(medals, sorted_pairs):
-        line = f"{medal}: {result} (가격: {price})"
+        line = f"{medal}: {result}"
         if result_text:  # 이미 내용이 있으면 줄바꿈 추가
             result_text += "\n"
         result_text += line
-    print(result_text)
+    print('📈 업비트 기준'+'\n'+result_text)
     #print(result1+ str(price1))
     #print(result2 + str(price2))
     #print(result3 + str(price3))
