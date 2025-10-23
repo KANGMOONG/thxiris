@@ -102,6 +102,7 @@ def on_message(chat: ChatContext):
 #입장감지
 @bot.on_event("new_member")
 def on_newmem(chat: ChatContext):
+    print(chat.room.id)
     if chat.room.id =='18437327656490923' :
         chat.reply(f"어서와라 {chat.sender.name}")
         chat.reply_media("res/welcome2.jpeg")
