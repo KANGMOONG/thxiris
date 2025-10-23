@@ -194,7 +194,7 @@ def Threeidiots(chat: ChatContext):
     result3,price3=get_upbit3(chat)
     
     pairs = [(price1,result1),(price2,result2),(price3,result3)]
-    sorted_pairs = sorted(pairs, key=lambda x: x[0])
+    sorted_pairs = sorted(pairs, key=lambda x: x[0], reverse=True)
     # 메달 순서
     medals = ["🥇금 ", "🥈은 ", "🥉동 "]
 
@@ -210,7 +210,8 @@ def Threeidiots(chat: ChatContext):
     #print(result2 + str(price2))
     #print(result3 + str(price3))
     #chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
-
+    chat.reply('📈 업비트 기준'+'\n'+result_text)
+    
 def wldadel(chat: ChatContext):
     val="wld"
     result1=get_bithumb(val)
