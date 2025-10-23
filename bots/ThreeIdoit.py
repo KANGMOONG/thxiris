@@ -192,11 +192,18 @@ def Threeidiots(chat: ChatContext):
     result2,price2=get_upbit2(chat)
     chat.message.msg='VIRTUAL'
     result3,price3=get_upbit3(chat)
+    
+    pairs = [(price1,result1),{price2,result2},(price3,result3)]
+    sorted_pairs = sorted(pairs, key=lamda x: x[0])
+    # 메달 순서
+    medals = ["🥇금 ", "🥈은 ", "🥉동 "]
 
+    for medal, (price, result) in zip(medals, sorted_pairs):
+        print(f"{medal}: {result} (가격: {price})")
 
-    print(result1+ str(price1))
-    print(result2 + str(price2))
-    print(result3 + str(price3))
+    #print(result1+ str(price1))
+    #print(result2 + str(price2))
+    #print(result3 + str(price3))
     #chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
 
 def wldadel(chat: ChatContext):
