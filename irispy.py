@@ -103,7 +103,7 @@ def on_message(chat: ChatContext):
 @bot.on_event("new_member")
 def on_newmem(chat: ChatContext):
     print(chat.room.id)
-    if str(chat.room.id) =='18452525268740055' :   # 18437327656490923
+    if str(chat.room.id) =='18437327656490923' :   # 18437327656490923
         chat.reply(f"어서와라 {chat.sender.name}")
         chat.reply_media("res/welcome2.jpeg")
     else :
