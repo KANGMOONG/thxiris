@@ -201,6 +201,7 @@ def Threeidiots(chat: ChatContext):
     for medal, (price, result) in zip(medals, sorted_pairs):
         print(f"{medal}: {result} (가격: {price})")
 
+
     #print(result1+ str(price1))
     #print(result2 + str(price2))
     #print(result3 + str(price3))
