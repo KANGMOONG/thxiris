@@ -55,6 +55,74 @@
 - `requirements.txt`: Python dependency manifest.
 - `test.py`, `testlocal.py`: local smoke or ad-hoc testing scripts.
 
+### 6.1 `bots/coin.py` Detailed Flow
+- `get_coin_info`: top-level dispatcher matching user commands (e.g., `!coin`, `!binance`, `!kimchi`, `!usd`, `!coin-add`, `!coin-remove`, `!coin-list`) and routing to helper functions.
+- `get_upbit` / `get_upbit_korean`: fetch single KRW markets from Upbit, resolve Korean names when needed, and append user PnL details from `PyKV` if the coin is registered.
+- `get_my_coins`: retrieve all holdings from `PyKV`, query Upbit tickers in batch, compute evaluation amount, invested capital, and percent gain, then reply with a consolidated report.
+- `get_upbit_all`: list all KRW markets ordered by signed change rate to provide a market-wide snapshot.
+- `get_binance`: iterate Binance 24h ticker data, normalize cross pairs, convert to KRW using the latest USD rate, and report price/change plus kimchi premium adjustment.
+- `get_kimchi_premium`: compare Binance BTCUSDT against Upbit KRW-BTC to calculate the kimchi premium and present both USD and KRW valuations.
+- `usd_to_krw`: convert arbitrary USD amounts using the Naver currency API and reply with formatted KRW equivalents.
+- `coin_add` / `coin_remove`: validate symbols against Upbit, then mutate `PyKV` (`coin.<user_id>`) entries to persist or delete holdings.
+- Shared utility `get_USDKRW` feeds exchange rates to multiple functions; failures are caught to reply with informative error messages while logging exceptions.
+
+### 6.2 Cross-Module Relationships & Process Logic
+- **Command Dispatch (`irispy.py`)**
+  - Central match/case dispatcher that maps raw chat commands to feature handlers across `bots/`.
+  - Decorators (`@has_param`, `@is_admin`, `@is_not_banned`, `@is_reply`) guard access before delegating.
+  - Maintains shared resources: global `Bot` instance, `IrisLink` for media replies, background nickname watcher (`bots/detect_nickname_change.py`).
+- **Feature Modules**
+  - `bots/coin.py` ↔ `PyKV`: stores per-user holdings under `coin.<user_id>`, reused by `get_coin_info` variants.
+  - `bots/ThreeIdoit.py` reuses coin utilities to bundle fixed tickers, combining Upbit and Bithumb APIs.
+  - `bots/stock.py` consumes Naver endpoints and `res/*.otf` fonts to build composite PNGs, then replies through the dispatcher.
+  - `bots/gemini.py`, `bots/imagen.py`, `bots/text2image.py` form the AI stack; all return via `chat.reply_media`, and depend on environment variables defined in `README.MD`.
+  - `bots/replyphoto.py`, `bots/test_img.py`, `bots/excel_test.py` act as utility responders, accessing static assets in `res/`.
+- **State & Moderation**
+  - `helper/BanControl.py` updates `PyKV` key `ban`, while `@is_not_banned` in `irispy.py` reads it to short-circuit prohibited users.
+  - `bots/detect_nickname_change.py` runs in a separate thread but shares the bot URL for callbacks.
+- **Execution Sequence**
+  1. Incoming chat event → `irispy.py` matches command.
+  2. Access checks pass → designated module fetches external data (Binance/Upbit/Naver/Gemini…).
+  3. Module post-processes via Pandas/NumPy/Matplotlib/Pillow or streams AI responses.
+  4. Replies (`chat.reply` / `chat.reply_media`) propagate back through Iris to the Kakao client.
+  5. Optional state writes occur through `PyKV`, enabling future contextual replies.
+
+### 6.3 Text Diagram
+```
+User Message
+    ↓
+irispy.py (event dispatcher)
+    ↓
+┌────────────────────────────┐
+│ Feature Modules            │
+│                            │
+│  • bots/coin.py ─────┐     │
+│  • bots/stock.py     │     │
+│  • bots/gemini.py    │     │
+│  • bots/imagen.py    │     │
+│  • bots/text2image.py│     │
+│  • bots/ThreeIdoit.py│     │
+└──────────────┬───────┘     │
+               │             │
+        External APIs        │
+   (Binance, Upbit, Naver,   │
+    Gemini/Imagen, etc.)     │
+               │             │
+      Processed response     │
+               ↓             │
+        chat.reply(*) ←──────┘
+               ↓
+         KakaoTalk user
+
+State Storage (PyKV)
+ ├─ coin.<user_id>  ← bots/coin.py, bots/ThreeIdoit.py
+ └─ ban             ← helper/BanControl.py / decorators
+
+Assets (res/)
+ ├─ Fonts (OTF/TTC) ← bots/stock.py, bots/text2image.py
+ └─ Images (JPG/PNG)← bots/replyphoto.py, bots/test_img.py
+```
+
 ## 7. Data Flow
 1. Iris bot receives a message event.
 2. Command dispatcher routes to the matching module function.
@@ -80,41 +148,41 @@
 ## 10. File Tree (condensed)
 ```
 .
-├── bots/
-│   ├── __init__.py
-│   ├── bicharttest.py
-│   ├── bicharttest2.py
-│   ├── check_test.py
-│   ├── coin.py
-│   ├── detect_nickname_change.py
-│   ├── excel_test.py
-│   ├── favoritecoin.py
-│   ├── gemini.py
-│   ├── globalstock.py
-│   ├── gpt_url_summary.py
-│   ├── gpt_url_summary_test.py
-│   ├── imagen.py
-│   ├── lyrics.py
-│   ├── naverglobal.py
-│   ├── pyeval.py
-│   ├── replyphoto.py
-│   ├── stock.py
-│   ├── stocktest.py
-│   ├── test_img.py
-│   ├── text2image.py
-│   └── ThreeIdoit.py
-├── helper/
-│   ├── __init__.py
-│   └── BanControl.py
-├── res/
-│   ├── temppic/.gitignore
-│   ├── *.jpeg|jpg|png
-│   └── *.otf|ttc
-├── irispy.py
-├── README.MD
-├── requirements.txt
-├── test.py
-└── testlocal.py
+|- bots/
+|  |- __init__.py
+|  |- bicharttest.py
+|  |- bicharttest2.py
+|  |- check_test.py
+|  |- coin.py
+|  |- detect_nickname_change.py
+|  |- excel_test.py
+|  |- favoritecoin.py
+|  |- gemini.py
+|  |- globalstock.py
+|  |- gpt_url_summary.py
+|  |- gpt_url_summary_test.py
+|  |- imagen.py
+|  |- lyrics.py
+|  |- naverglobal.py
+|  |- pyeval.py
+|  |- replyphoto.py
+|  |- stock.py
+|  |- stocktest.py
+|  |- test_img.py
+|  |- text2image.py
+|  |- ThreeIdoit.py
+|- helper/
+|  |- __init__.py
+|  |- BanControl.py
+|- res/
+|  |- temppic/.gitignore
+|  |- *.jpeg|jpg|png
+|  |- *.otf|ttc
+|- irispy.py
+|- README.MD
+|- requirements.txt
+|- test.py
+|- testlocal.py
 ```
 
 ## 11. Risks and Mitigations
@@ -130,4 +198,3 @@
 3. Expand automated tests covering key commands and image generation.
 4. Externalize configuration (API base URLs, chart save paths) into a settings module.
 5. Consider rate-limit aware caching for high-traffic API calls.
-

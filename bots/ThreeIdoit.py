@@ -67,7 +67,7 @@ def get_upbit(chat: ChatContext):
     result = query + f'     {price:,}원  {change:,.2f}%'
  
     #chat.reply(result)
-    return result
+    return result, price
 
 def get_upbit2(chat: ChatContext):
     kv = PyKV()
@@ -91,7 +91,7 @@ def get_upbit2(chat: ChatContext):
     result = query + f'   {price:,}원  {change:,.2f}%'
       
     #chat.reply(result)
-    return result
+    return result, price
 
 def get_upbit3(chat: ChatContext):
     kv = PyKV()
@@ -115,7 +115,7 @@ def get_upbit3(chat: ChatContext):
     result = query + f' {price:,}원  {change:,.2f}%'
       
     #chat.reply(result)
-    return result
+    return result, price
     
 def get_upbit_all(chat: ChatContext):
     res = requests.get(all_url)
@@ -187,15 +187,17 @@ def get_binance(chat: ChatContext):
 
 def Threeidiots(chat: ChatContext):
     chat.message.msg='WLD'
-    result1=get_upbit(chat)
+    result1,price1=get_upbit(chat)
     chat.message.msg='ONDO'
-    result2=get_upbit2(chat)
+    result2,price2=get_upbit2(chat)
     chat.message.msg='VIRTUAL'
-    result3=get_upbit3(chat)
-    print(result1+'\n')
-    print(result2)
-    print(result3)
-    chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
+    result3,price3=get_upbit3(chat)
+
+
+    print(result1+ price1)
+    print(result2 + price2)
+    print(result3 + price3)
+    #chat.reply('📈 업비트 기준'+'\n'+result1+'\n'+result2+'\n'+result3)
 
 def wldadel(chat: ChatContext):
     val="wld"
