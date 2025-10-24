@@ -1,4 +1,5 @@
 from iris import ChatContext, Bot
+import sys
 from iris.bot.models import ErrorContext
 
 iris_url = sys.argv[1]
