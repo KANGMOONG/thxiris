@@ -1,6 +1,8 @@
+import time
 from iris import ChatContext, Bot
-import sys
 from iris.bot.models import ErrorContext
+from iris.decorators import *
+from iris.kakaolink import IrisLink
 
 iris_url = sys.argv[1]
 bot = Bot(iris_url)
