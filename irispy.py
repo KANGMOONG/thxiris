@@ -10,7 +10,6 @@ from bots.replyphoto import reply_photo
 from bots.text2image import draw_text
 from bots.coin import get_coin_info
 from bots.test_img import get_img
-from bots.excel_test import excel
 from bots.stocktest import kospidaq
 from bots.ThreeIdoit import Threeidiots
 from bots.ThreeIdoit import wldadel
@@ -30,7 +29,7 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    #excel(chat)
+    
     try:
         match chat.message.command:
             case "!병림픽" :
