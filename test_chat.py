@@ -13,9 +13,4 @@ def on_message(chat: ChatContext):
     print(chat.message.msg)
 
 if __name__ == "__main__":
-    #닉네임감지를 사용하지 않는 경우 주석처리
-    nickname_detect_thread = threading.Thread(target=detect_nickname_change, args=(bot.iris_url,))
-    nickname_detect_thread.start()
-    #카카오링크를 사용하지 않는 경우 주석처리
-    kl = IrisLink(bot.iris_url)
     bot.run()
