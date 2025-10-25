@@ -10,7 +10,7 @@ bot = Bot(iris_url)
 
 @bot.on_event("message")
 def on_message(chat: ChatContext):
-    print(chat.sender.name+'\n'+chat.message.msg)
+    print(chat.sender.name+' '+chat.message.msg)
 
 if __name__ == "__main__":
     bot.run()
