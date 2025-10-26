@@ -10,6 +10,7 @@ from bots.text2image import draw_text
 from bots.coin import get_coin_info
 from bots.test_img import get_img
 from bots.kospitest import kospidaq
+from bots.nasdaq import nasdaq
 from bots.ThreeIdoit import Threeidiots
 from bots.ThreeIdoit import wldadel
 from bots.favoritecoin import favorite_coin_info
@@ -40,6 +41,9 @@ def on_message(chat: ChatContext):
             case "!증시":
                 kospidaq(chat)
             
+            case "!미":
+                nasdaq(chat)
+
             case "!hhi":
                 chat.reply(f"Hello {chat.sender.name}")
 
