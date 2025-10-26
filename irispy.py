@@ -9,7 +9,7 @@ from bots.replyphoto import reply_photo
 from bots.text2image import draw_text
 from bots.coin import get_coin_info
 from bots.test_img import get_img
-from bots.kospitest import kospidaq
+from bots.kospidaq import kospidaq
 from bots.nasdaq import nasdaq
 from bots.ThreeIdoit import Threeidiots
 from bots.ThreeIdoit import wldadel

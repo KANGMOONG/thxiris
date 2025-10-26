@@ -305,24 +305,36 @@ def _create_fx_panel(chart_image: Image.Image, fx: Dict[str, float]) -> Image.Im
     return panel
 
 
+def _expand_panel(panel: Image.Image, width: int) -> Image.Image:
+    if panel.width >= width:
+        return panel
+    expanded = Image.new("RGB", (width, panel.height), BACKGROUND_COLOR)
+    expanded.paste(panel, (0, 0))
+    return expanded
+
+
 def _create_nasdaq_image() -> Image.Image:
     chart_image = _fetch_chart_image()
     market_data = _fetch_market_data()
-    nasdaq_panel = _create_panel(chart_image, market_data)
+    panels: List[Image.Image] = [_create_panel(chart_image, market_data)]
 
     try:
         fx = _fetch_usdkrw_data()
         fx_chart = _fetch_usdkrw_chart()
-        fx_panel = _create_fx_panel(fx_chart, fx)
-        width = max(nasdaq_panel.width, fx_panel.width)
-        height = nasdaq_panel.height + fx_panel.height
-        combined = Image.new("RGB", (width, height), BACKGROUND_COLOR)
-        combined.paste(nasdaq_panel, (0, 0))
-        combined.paste(fx_panel, (0, nasdaq_panel.height))
-        return combined
+        panels.append(_create_fx_panel(fx_chart, fx))
     except Exception as exc:
         print(f"Failed to append USD/KRW panel: {exc}")
-        return nasdaq_panel
+
+    width = max(panel.width for panel in panels)
+    expanded = [_expand_panel(panel, width) for panel in panels]
+    height = sum(panel.height for panel in expanded)
+
+    combined = Image.new("RGB", (width, height), BACKGROUND_COLOR)
+    offset = 0
+    for panel in expanded:
+        combined.paste(panel, (0, offset))
+        offset += panel.height
+    return combined
 
 
 def nasdaq(chat: Optional[ChatContext] = None):
