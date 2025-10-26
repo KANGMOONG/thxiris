@@ -6,6 +6,11 @@ from iris.decorators import *
 from iris import ChatContext
 
 
+
+#나스닥jpg <img src="https://ssl.pstatic.net/imgfinance/chart/mobile/world/mini/.IXIC_naverpc_l.png" width="180" height="72" alt="">
+#다존jpg <img src="https://ssl.pstatic.net/imgfinance/chart/mobile/world/mini/.DJI_naverpc_l.png" width="180" height="72" alt="">
+#환율jpg <img src="https://ssl.pstatic.net/imgfinance/chart/mobile/marketindex/month3/FX_USDKRW_naverpc_l.png" width="180" height="44" alt="">
+
 @has_param
 def create_stock_image(chat: ChatContext):
     """
