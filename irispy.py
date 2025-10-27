@@ -8,7 +8,7 @@ from bots.lyrics import get_lyrics, find_lyrics
 from bots.replyphoto import reply_photo
 from bots.text2image import draw_text
 from bots.coin import get_coin_info
-from bots.test_img import get_img
+#from bots.test_img import get_img
 from bots.kospidaq import kospidaq
 from bots.nasdaq import nasdaq
 from bots.ThreeIdoit import Threeidiots
@@ -75,8 +75,6 @@ def on_message(chat: ChatContext):
             case "!금" :
                 create_gold_image(chat)
 
-            case "!ig":
-                get_imagen(chat)
             
             case "!가사찾기":
                 find_lyrics(chat)
@@ -93,8 +91,6 @@ def on_message(chat: ChatContext):
             case "!즐찾등록" | "!즐찾삭제" | "!즐":
                 favorite_coin_info(chat)
 
-            case "!1":
-                get_img(chat)
             
     except Exception as e :
         print(e)
