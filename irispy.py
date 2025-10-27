@@ -50,10 +50,6 @@ def on_message(chat: ChatContext):
             case "!1단계" | "!2단계" | "!3단계" | "!절망시리즈" | "!퍽":
                 reply_photo(chat, kl)
 
-            #make your own help.png or remove !iris
-            case "!iris":
-                chat.reply_media("res/help.png")
-
             case "!gi" | "!i2i" | "!분석":
                 get_gemini(chat)
             
@@ -74,16 +70,6 @@ def on_message(chat: ChatContext):
 
             case "!금" :
                 create_gold_image(chat)
-
-            
-            case "!가사찾기":
-                find_lyrics(chat)
-
-            case "!노래가사":
-                get_lyrics(chat)
-
-            case "!텍스트" | "!사진" | "!껄무새" | "!멈춰" | "!지워" | "!진행" | "!말대꾸" | "!텍스트추가":
-                draw_text(chat)
             
             case "!코인" | "!바낸" | "!김프" | "!달러" :
                 get_coin_info(chat)
