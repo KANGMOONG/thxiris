@@ -29,7 +29,7 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    if chat_user_id == '6677876040401202432':
+    if chat.user_id == '6677876040401202432':
         chat.reply(chat.message.msg)
     
     try:
