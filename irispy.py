@@ -29,8 +29,9 @@ bot = Bot(iris_url)
 @bot.on_event("message")
 @is_not_banned
 def on_message(chat: ChatContext):
-    if chat.user_id == '6677876040401202432':
-        chat.reply(chat.message.msg)
+    print(chat.user_id)
+    #if chat.user_id == '6677876040401202432':
+    #    chat.reply(chat.message.msg)
     
     try:
         match chat.message.command:
